@@ -43,6 +43,7 @@ sphinx-click = "^3.0.2"
 Pygments = "^2.10.0"
 pyupgrade = "^2.29.1"
 furo = ">=2021.11.12"
+rope = "^0.23.0"
 
 [tool.poetry.scripts]
 osparc-control = "osparc_control.__main__:main"
