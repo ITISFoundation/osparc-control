@@ -112,7 +112,7 @@ jobs:
           path: docs/_build
 
   coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: tests
     steps:
       - name: Check out the repository
