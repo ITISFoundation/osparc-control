@@ -53,7 +53,7 @@ class MemoryStore:
         if len(self._store[key]) > self._max_sizes[key]:
             raise CollectionIsFullException(key=key, max_items=self._max_sizes[key])
 
-    def size_of(self, key: str) -> int:
+    def size_of_collection(self, key: str) -> int:
         self._ensure_key(key)
         return len(self._store[key])
 

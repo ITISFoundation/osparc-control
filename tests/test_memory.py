@@ -66,7 +66,7 @@ def test_list_is_full(key: str, memory_store: MemoryStore, max_size: int):
     for t in range(max_size):
         memory_store.set_value(key, t, f"v{t}")
 
-    assert memory_store.size_of(key) == max_size
+    assert memory_store.size_of_collection(key) == max_size
 
     with pytest.raises(CollectionIsFullException):
         memory_store.set_value(key, 10, f"v10")
