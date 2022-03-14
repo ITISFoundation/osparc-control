@@ -1,7 +1,7 @@
 from typing import Dict
 from queue import Queue
 
-from .interface import BaseTransport
+from .base_transport import BaseTransport
 
 
 class InMemoryTransport(metaclass=BaseTransport):
