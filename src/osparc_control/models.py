@@ -2,8 +2,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import umsgpack
-from pydantic import BaseModel, Field, validator
-from pyparsing import Opt
+from pydantic import BaseModel, Field
 
 
 class _BaseSerializer(BaseModel):

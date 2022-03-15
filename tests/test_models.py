@@ -7,6 +7,7 @@ import umsgpack
 from osparc_control.models import (
     CommandManifest,
     CommandParameter,
+    CommandReply,
     CommandRequest,
     CommnadType,
 )
@@ -98,3 +99,12 @@ def test_msgpack_serialization_deserialization(
     assert command_request.to_bytes() == umsgpack.packb(
         json.loads(command_request.json())
     )
+
+
+@pytest.mark.parametrize("payload", [None, "a_string", 1, 1.0, b"some_bytes"])
+def test_command_reply_payloads_serialization_deserialization(
+    request_id: str, payload: Any
+):
+    command_reply = CommandReply(reply_id=request_id, payload=payload)
+    assert command_reply
+    assert command_reply == CommandReply.from_bytes(command_reply.to_bytes())
