@@ -18,6 +18,10 @@ Changelog = "https://github.com/ITISFoundation/osparc-control/releases"
 [tool.poetry.dependencies]
 python = "^3.6.2"
 click = "^8.0.1"
+pyzmq = ">=14.0.0"
+u-msgpack-python = ">=2.7.1"
+pydantic = ">=1.8.2"
+tenacity = ">=8.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
