@@ -6,7 +6,7 @@ from .base_transport import BaseTransport
 
 class InMemoryTransport(metaclass=BaseTransport):
     """
-    Blocking in memory implementation, working with queues.
+    Non blocking in memory implementation, working with queues.
     Can only be mixed with threading.
 
     - sends data to `destination`
@@ -31,5 +31,14 @@ class InMemoryTransport(metaclass=BaseTransport):
         except Empty:
             return None
 
-    def thread_init(self) -> None:
-        """no action required for this transport"""
+    def sender_init(self) -> None:
+        """no action required here"""
+
+    def receiver_init(self) -> None:
+        """no action required here"""
+
+    def sender_cleanup(self) -> None:
+        """no action required here"""
+
+    def receiver_cleanup(self) -> None:
+        """no action required here"""

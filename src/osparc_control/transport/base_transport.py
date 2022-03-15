@@ -16,10 +16,27 @@ class BaseTransport(ABCMeta):
         """
 
     @abstractmethod
-    def thread_init(self) -> None:
+    def sender_init(self) -> None:
         """
         Some libraries require thread specific context.
         This will be called by the thread once its started
+        """
+
+    @abstractmethod
+    def receiver_init(self) -> None:
+        """
+        Some libraries require thread specific context.
+        This will be called by the thread once its started
+        """
+
+    def sender_cleanup(self) -> None:
+        """
+        Some libraries require cleanup when done with them
+        """
+
+    def receiver_cleanup(self) -> None:
+        """
+        Some libraries require cleanup when done with them
         """
 
 
@@ -30,17 +47,23 @@ class SenderReceiverPair:
         self._sender: BaseTransport = sender
         self._receiver: BaseTransport = receiver
 
+    def sender_init(self) -> None:
+        """called by the background thread dealing with the sender"""
+        self._sender.sender_init()
+
     def send_bytes(self, message: bytes) -> None:
         self._sender.send_bytes(message)
+
+    def receiver_init(self) -> None:
+        """called by the background thread dealing with the receiver"""
+        self._receiver.receiver_init()
 
     def receive_bytes(self) -> Optional[bytes]:
         """this must never block"""
         return self._receiver.receive_bytes()
 
-    def receiver_init(self) -> None:
-        """called by the background thread dealing with the receiver"""
-        self._receiver.thread_init()
+    def sender_cleanup(self) -> None:
+        self._sender.sender_cleanup()
 
-    def sender_init(self) -> None:
-        """called by the background thread dealing with the sender"""
-        self._sender.thread_init()
+    def receiver_cleanup(self) -> None:
+        self._receiver.receiver_cleanup()

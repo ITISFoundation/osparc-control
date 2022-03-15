@@ -1,9 +1,10 @@
 from typing import Iterable, Type
-
+from threading import Thread
 import pytest
 
 from osparc_control.transport.base_transport import BaseTransport, SenderReceiverPair
 from osparc_control.transport.in_memory import InMemoryTransport
+from osparc_control.transport.zeromq import ZeroMQTransport
 
 # UTILS
 
@@ -17,29 +18,51 @@ def _payload_generator(start: int, stop: int) -> Iterable[bytes]:
 # TESTS
 
 
-@pytest.fixture(params=[InMemoryTransport])
+@pytest.fixture(params=[InMemoryTransport, ZeroMQTransport])
 def transport_class(request) -> Type[BaseTransport]:
     return request.param
 
 
-def test_send_receive(transport_class: Type[BaseTransport]):
-    sender_receiver_pair = SenderReceiverPair(
-        sender=transport_class("A", "B"),
-        receiver=transport_class("B", "A"),
-    )
+@pytest.fixture
+def sender_receiver_pair(
+    transport_class: Type[BaseTransport],
+) -> Iterable[SenderReceiverPair]:
+    if transport_class == InMemoryTransport:
+        sender = transport_class("A", "B")
+        receiver = transport_class("B", "A")
+    elif transport_class == ZeroMQTransport:
+        port = 1111
+        sender = transport_class(
+            listen_port=port, remote_host="localhost", remote_port=port
+        )
+        receiver = transport_class(
+            listen_port=port, remote_host="localhost", remote_port=port
+        )
 
-    sender_receiver_pair.receiver_init()
+    sender_receiver_pair = SenderReceiverPair(sender=sender, receiver=receiver)
+
     sender_receiver_pair.sender_init()
+    sender_receiver_pair.receiver_init()
 
+    yield sender_receiver_pair
+
+    sender_receiver_pair.sender_cleanup()
+    sender_receiver_pair.receiver_cleanup()
+
+
+def test_send_receive_single_thread(sender_receiver_pair: SenderReceiverPair):
     for message in _payload_generator(1, 10):
-        # TEST SENDER -> RECEIVER
+        print("sending", message)
         sender_receiver_pair.send_bytes(message)
-        assert sender_receiver_pair.receive_bytes() == message
 
-    for message in _payload_generator(11, 20):
-        # TEST RECEIVER -> SENDER
-        sender_receiver_pair.send_bytes(message)
-        assert sender_receiver_pair.receive_bytes() == message
+    for expected_message in _payload_generator(1, 10):
+        message = sender_receiver_pair.receive_bytes()
+        print("received", message)
+        assert message == expected_message
+
+
+def test_receive_nothing(sender_receiver_pair: SenderReceiverPair):
+    assert sender_receiver_pair.receive_bytes() == None
 
 
 def test_receive_returns_none_if_no_message_available():
