@@ -2,16 +2,19 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import umsgpack
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Extra, Field
 
 
-class _BaseSerializer(BaseModel):
+class CommandBase(BaseModel):
     def to_bytes(self) -> bytes:
         return umsgpack.packb(self.dict())
 
     @classmethod
     def from_bytes(cls, raw: bytes) -> Optional[Any]:
         return cls.parse_obj(umsgpack.unpackb(raw))
+
+    class Config:
+        extra = Extra.allow
 
 
 class CommandParameter(BaseModel):
@@ -67,7 +70,7 @@ class CommandManifest(BaseModel):
         )
 
 
-class CommandRequest(_BaseSerializer):
+class CommandRequest(CommandBase):
     request_id: str = Field(..., description="unique identifier")
     action: str = Field(..., description="name of the action to be triggered on remote")
     params: Dict[str, Any] = Field({}, description="requested parameters by the user")
@@ -95,7 +98,7 @@ class CommandRequest(_BaseSerializer):
         )
 
 
-class CommandReply(_BaseSerializer):
+class CommandReply(CommandBase):
     reply_id: str = Field(..., description="unique identifier from request")
     payload: Any = Field(..., description="user defined value for the command")
 

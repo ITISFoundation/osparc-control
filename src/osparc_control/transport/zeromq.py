@@ -9,12 +9,7 @@ from .base_transport import BaseTransport
 
 
 class ZeroMQTransport(metaclass=BaseTransport):
-    def __init__(
-        self,
-        listen_port: int,
-        remote_host: str,
-        remote_port: int,
-    ):
+    def __init__(self, listen_port: int, remote_host: str, remote_port: int):
         self.listen_port: int = listen_port
         self.remote_host: str = remote_host
         self.remote_port: int = remote_port
