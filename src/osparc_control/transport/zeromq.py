@@ -1,9 +1,9 @@
 from typing import Optional
+
+import zmq
 from tenacity import RetryError, Retrying
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
-
-import zmq
 
 from .base_transport import BaseTransport
 

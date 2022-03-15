@@ -3,9 +3,9 @@ from queue import Queue
 from threading import Thread
 from time import sleep
 from typing import Any, Dict, Optional, Tuple, Union
-from uuid import uuid4, getnode
-from pydantic import ValidationError
+from uuid import getnode, uuid4
 
+from pydantic import ValidationError
 from tenacity import RetryError, Retrying
 from tenacity.stop import stop_after_delay
 from tenacity.wait import wait_fixed
@@ -19,7 +19,6 @@ from .models import (
     CommandRequest,
     CommnadType,
     RequestsTracker,
-    CommandBase,
     TrackedRequest,
 )
 from .transport.base_transport import SenderReceiverPair

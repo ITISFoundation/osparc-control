@@ -1,5 +1,5 @@
 from typing import Iterable, Type
-from threading import Thread
+
 import pytest
 
 from osparc_control.transport.base_transport import BaseTransport, SenderReceiverPair
