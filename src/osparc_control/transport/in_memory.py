@@ -1,5 +1,5 @@
-from typing import Dict
-from queue import Queue
+from queue import Empty, Queue
+from typing import Dict, Optional
 
 from .base_transport import BaseTransport
 
@@ -25,5 +25,11 @@ class InMemoryTransport(metaclass=BaseTransport):
     def send_bytes(self, payload: bytes) -> None:
         self._SHARED_QUEUES[self.destination].put(payload)
 
-    def receive_bytes(self) -> bytes:
-        return self._SHARED_QUEUES[self.source].get()
+    def receive_bytes(self) -> Optional[bytes]:
+        try:
+            return self._SHARED_QUEUES[self.source].get(block=False)
+        except Empty:
+            return None
+
+    def thread_init(self) -> None:
+        """no action required for this transport"""

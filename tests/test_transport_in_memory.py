@@ -1,4 +1,5 @@
 from typing import Iterable
+
 from osparc_control.transport.in_memory import InMemoryTransport
 
 # UTILS
@@ -26,3 +27,8 @@ def test_send_receive():
         # TEST RECEIVER -> SENDER
         receiver.send_bytes(message)
         assert sender.receive_bytes() == message
+
+
+def test_receive_returns_none_if_no_message_available():
+    receiver = InMemoryTransport("B", "A")
+    assert receiver.receive_bytes() is None
