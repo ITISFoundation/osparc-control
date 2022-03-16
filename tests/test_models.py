@@ -35,7 +35,6 @@ def test_command_manifest(params: Optional[List[CommandParameter]]):
             description="some test action",
             command_type=command_type,
             params=[] if params is None else params,
-            handler=None,
         )
 
 
@@ -49,7 +48,6 @@ def test_command(request_id: str, params: Optional[List[CommandParameter]]):
         description="some test action",
         command_type=CommnadType.WITHOUT_REPLY,
         params=[] if params is None else params,
-        handler=None,
     )
 
     assert CommandRequest(
@@ -73,7 +71,6 @@ def test_msgpack_serialization_deserialization(
         description="some test action",
         command_type=CommnadType.WAIT_FOR_REPLY,
         params=[] if params is None else params,
-        handler=None,
     )
 
     command_request = CommandRequest(
@@ -127,5 +124,4 @@ def test_duplicate_command_parameter_name_in_manifest():
                 CommandParameter(name="a", description="not allowed same name"),
             ],
             command_type=CommnadType.WITH_REPLAY,
-            handler=None,
         )

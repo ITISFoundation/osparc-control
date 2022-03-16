@@ -1,5 +1,5 @@
 from collections import deque
-from queue import Queue
+from queue import Queue, Empty
 from threading import Thread
 from time import sleep
 from typing import Any, Dict, Optional, Tuple, Union, List
@@ -16,8 +16,6 @@ from .errors import (
     NoReplyException,
     CommnadNotAcceptedException,
     NoCommandReceivedArrivedException,
-    NotAllCommandManifestsHaveHandlersException,
-    SignatureDoesNotMatchException,
 )
 from .models import (
     CommandReceived,
@@ -59,7 +57,7 @@ def _get_sender_receiver_pair(
     return SenderReceiverPair(sender=sender, receiver=receiver)
 
 
-class SomeEntryPoint:
+class Engine:
     def __init__(
         self,
         remote_host: str,
@@ -112,7 +110,6 @@ class SomeEntryPoint:
                 # exit worker
                 break
 
-            print("Message to deliver", message)
             # send message
             self._sender_receiver_pair.send_bytes(message.to_bytes())
 
@@ -146,7 +143,8 @@ class SomeEntryPoint:
         if command_request.command_type != manifest.command_type:
             error_message = (
                 f"Incoming request command_type {command_request.command_type} do not match "
-                f"manifest's command_type {manifest.command_type}"
+                f"manifest's command_type {manifest.command_type} for command "
+                f"{command_request.action}"
             )
             _refuse_and_return(error_message)
 
@@ -242,20 +240,22 @@ class SomeEntryPoint:
         self._out_queue.put(request)
 
         # check command_received status
+        command_received: Optional[CommandReceived] = None
         try:
             for attempt in Retrying(
                 stop=stop_after_delay(WAIT_FOR_RECEIVED),
                 wait=wait_fixed(WAIT_BETWEEN_CHECKS),
+                retry_error_cls=Empty,
             ):
                 with attempt:
                     command_received = self._incoming_command_queue.get(block=False)
-
-                    if not command_received.accepted:
-                        raise CommnadNotAcceptedException(
-                            command_received.error_message
-                        )
         except RetryError:
             raise NoCommandReceivedArrivedException()
+
+        assert command_received
+
+        if not command_received.accepted:
+            raise CommnadNotAcceptedException(command_received.error_message)
 
         return request
 
@@ -305,9 +305,11 @@ class SomeEntryPoint:
         )
         if tracked_request is None:
             return False, None
-
         # check for the correct type of request
-        if not tracked_request.request.command_type != CommnadType.WAIT_FOR_REPLY:
+        if tracked_request.request.command_type not in {
+            CommnadType.WAIT_FOR_REPLY,
+            CommnadType.WITH_REPLAY,
+        }:
             raise RuntimeError(
                 (
                     f"Request {tracked_request.request} not expect a "
@@ -336,7 +338,9 @@ class SomeEntryPoint:
 
         try:
             for attempt in Retrying(
-                stop=stop_after_delay(timeout), wait=wait_fixed(WAIT_BETWEEN_CHECKS)
+                stop=stop_after_delay(timeout),
+                wait=wait_fixed(WAIT_BETWEEN_CHECKS),
+                retry_error_cls=NoReplyException,
             ):
                 with attempt:
                     reply_received, result = self.check_for_reply(request.request_id)
@@ -364,40 +368,3 @@ class SomeEntryPoint:
     def reply_to_command(self, request_id: str, payload: Any) -> None:
         """provide the reply back to a command"""
         self._out_queue.put(CommandReply(reply_id=request_id, payload=payload))
-
-    def process_incoming_requests(self, keep_processing: bool = False) -> None:
-        """
-        Requires the user to define handler on all CommandManifest entries
-        param: `keep_processing` if True will process in an infinite loop without exiting
-        """
-        all_commands_define_a_handler = all(
-            manifest.handler is not None
-            for manifest in self._exposed_interface.values()
-        )
-        if not all_commands_define_a_handler:
-            manifests_without_handler = [
-                x for x in self._exposed_interface.values() if x.handler is None
-            ]
-            raise NotAllCommandManifestsHaveHandlersException(manifests_without_handler)
-
-        can_continue = True
-        while can_continue:
-            for incoming_request in self.get_incoming_requests():
-                # fetch manifest
-                manifest = self._exposed_interface[incoming_request.action]
-
-                # call handler with params and get the result
-                assert manifest.handler
-                try:
-                    result = manifest.handler(**incoming_request.params)
-                except TypeError as e:
-                    raise SignatureDoesNotMatchException(
-                        manifest.action, incoming_request.params
-                    ) from e
-
-                # reply to command
-                self.reply_to_command(
-                    request_id=incoming_request.request_id, payload=result
-                )
-
-            can_continue = keep_processing

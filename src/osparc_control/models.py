@@ -58,13 +58,6 @@ class CommandManifest(BaseModel):
     command_type: CommnadType = Field(
         ..., description="describes the command type, behaviour and usage"
     )
-    handler: Optional[Callable] = Field(
-        None,
-        description=(
-            "if the user provides a callable it will be called to handle"
-            "incoming requests"
-        ),
-    )
 
     @validator("params")
     @classmethod
