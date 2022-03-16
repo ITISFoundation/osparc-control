@@ -42,12 +42,6 @@ Features
 * TODO
 
 
-Requirements
-------------
-
-* TODO
-
-
 Installation
 ------------
 
@@ -61,7 +55,7 @@ You can install *Osparc Control* via pip_ from PyPI_:
 Usage
 -----
 
-Please see the `Command-line Reference <Usage_>`_ for details.
+Please have a look at the examples folder.
 
 
 Contributing

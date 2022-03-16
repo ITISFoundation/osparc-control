@@ -25,6 +25,9 @@ print("result of addition", result)
 
 print("getting solver time")
 solver_time = control_interface.request_with_immediate_reply("get_time", timeout=1.0)
+random_int = control_interface.request_with_immediate_reply(
+    "random_in_range", timeout=1.0, params={"a": 1, "b": 3}
+)
 print("solver time", solver_time)
 
 print("sending command to print internal status")

@@ -357,7 +357,10 @@ class ControlInterface:
         return result
 
     def get_incoming_requests(self) -> List[CommandRequest]:
-        """retruns all accumulated CommandRequests"""
+        """
+        Non blocking, retruns all accumulated CommandRequests.
+        It is meant to be used in an existing cycle
+        """
         results: Deque[CommandRequest] = deque()
 
         # fetch all elements empty
