@@ -1,14 +1,15 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
 from typing import Optional
 
 
 class BaseTransport(ABCMeta):
     @abstractmethod
-    def send_bytes(self, payload: bytes) -> None:
+    def send_bytes(self, payload: bytes) -> None:  # noqa: N804
         """sends bytes to remote"""
 
     @abstractmethod
-    def receive_bytes(self) -> Optional[bytes]:
+    def receive_bytes(self) -> Optional[bytes]:  # noqa: N804
         """
         returns bytes from remote
         NOTE: this must never wait, it returns None if
@@ -16,25 +17,25 @@ class BaseTransport(ABCMeta):
         """
 
     @abstractmethod
-    def sender_init(self) -> None:
+    def sender_init(self) -> None:  # noqa: N804
         """
         Some libraries require thread specific context.
         This will be called by the thread once its started
         """
 
     @abstractmethod
-    def receiver_init(self) -> None:
+    def receiver_init(self) -> None:  # noqa: N804
         """
         Some libraries require thread specific context.
         This will be called by the thread once its started
         """
 
-    def sender_cleanup(self) -> None:
+    def sender_cleanup(self) -> None:  # noqa: N804
         """
         Some libraries require cleanup when done with them
         """
 
-    def receiver_cleanup(self) -> None:
+    def receiver_cleanup(self) -> None:  # noqa: N804
         """
         Some libraries require cleanup when done with them
         """

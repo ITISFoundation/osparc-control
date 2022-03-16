@@ -1,9 +1,7 @@
-from osparc_control import (
-    ControlInterface,
-    CommandManifest,
-    CommandParameter,
-    CommnadType,
-)
+from osparc_control import CommandManifest
+from osparc_control import CommandParameter
+from osparc_control import CommnadType
+from osparc_control import ControlInterface
 
 
 command_add = CommandManifest(

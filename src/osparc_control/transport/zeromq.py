@@ -1,7 +1,8 @@
 from typing import Optional
 
 import zmq
-from tenacity import RetryError, Retrying
+from tenacity import RetryError
+from tenacity import Retrying
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
 
@@ -20,14 +21,14 @@ class ZeroMQTransport(metaclass=BaseTransport):
         self._recv_contex: Optional[zmq.context.Context] = None
 
     def send_bytes(self, payload: bytes) -> None:
-        assert self._send_socket
+        assert self._send_socket  # noqa: S101
 
         self._send_socket.send(payload)
 
     def receive_bytes(
         self, retry_count: int = 3, wait_between: float = 0.01
     ) -> Optional[bytes]:
-        assert self._recv_socket
+        assert self._recv_socket  # noqa: S101
 
         # try to fetch a message, usning unlocking sockets does not guarantee
         # that data is always present, retry 3 times in a short amount of time
@@ -53,13 +54,13 @@ class ZeroMQTransport(metaclass=BaseTransport):
         self._recv_socket.connect(f"tcp://{self.remote_host}:{self.remote_port}")
 
     def sender_cleanup(self) -> None:
-        assert self._send_socket
+        assert self._send_socket  # noqa: S101
         self._send_socket.close()
-        assert self._send_contex
+        assert self._send_contex  # noqa: S101
         self._send_contex.term()
 
     def receiver_cleanup(self) -> None:
-        assert self._recv_socket
+        assert self._recv_socket  # noqa: S101
         self._recv_socket.close()
-        assert self._recv_contex
+        assert self._recv_contex  # noqa: S101
         self._recv_contex.term()

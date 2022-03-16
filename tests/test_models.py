@@ -1,18 +1,19 @@
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import pytest
 import umsgpack
 from pydantic import ValidationError
 
-from osparc_control.models import (
-    CommandManifest,
-    CommandParameter,
-    CommandReceived,
-    CommandReply,
-    CommandRequest,
-    CommnadType,
-)
+from osparc_control.models import CommandManifest
+from osparc_control.models import CommandParameter
+from osparc_control.models import CommandReceived
+from osparc_control.models import CommandReply
+from osparc_control.models import CommandRequest
+from osparc_control.models import CommnadType
 
 
 @pytest.fixture

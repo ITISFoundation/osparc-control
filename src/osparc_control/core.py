@@ -1,32 +1,35 @@
 from collections import deque
-from queue import Queue, Empty
+from queue import Empty
+from queue import Queue
 from threading import Thread
 from time import sleep
-from typing import Any, Dict, Optional, Tuple, Union, List
-from uuid import getnode, uuid4
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+from uuid import getnode
+from uuid import uuid4
 
 from pydantic import ValidationError
-from tenacity import RetryError, Retrying
+from tenacity import RetryError
+from tenacity import Retrying
 from tenacity.stop import stop_after_delay
 from tenacity.wait import wait_fixed
 
-from osparc_control.transport.zeromq import ZeroMQTransport
-
-from .errors import (
-    NoReplyException,
-    CommnadNotAcceptedException,
-    NoCommandReceivedArrivedException,
-)
-from .models import (
-    CommandReceived,
-    CommandManifest,
-    CommandReply,
-    CommandRequest,
-    CommnadType,
-    RequestsTracker,
-    TrackedRequest,
-)
+from .errors import CommnadNotAcceptedError
+from .errors import NoCommandReceivedArrivedError
+from .errors import NoReplyError
+from .models import CommandManifest
+from .models import CommandReceived
+from .models import CommandReply
+from .models import CommandRequest
+from .models import CommnadType
+from .models import RequestsTracker
+from .models import TrackedRequest
 from .transport.base_transport import SenderReceiverPair
+from osparc_control.transport.zeromq import ZeroMQTransport
 
 
 _MINUTE: float = 60.0
@@ -80,10 +83,8 @@ class ControlInterface:
         }
         if len(self._exposed_interface) != len(exposed_interface):
             raise ValueError(
-                (
-                    f"Provided exposed_interface={exposed_interface} "
-                    "contains CommandManifest with same action name."
-                )
+                f"Provided exposed_interface={exposed_interface} "
+                "contains CommandManifest with same action name."
             )
 
         self._request_tracker: RequestsTracker = {}
@@ -117,7 +118,7 @@ class ControlInterface:
 
     def _handle_command_request(self, response: bytes) -> None:
         command_request: Optional[CommandRequest] = CommandRequest.from_bytes(response)
-        assert command_request
+        assert command_request  # noqa: S101
 
         def _refuse_and_return(error_message: str) -> None:
             self._out_queue.put(
@@ -142,9 +143,9 @@ class ControlInterface:
         # check command_type matches the one declared in the manifest
         if command_request.command_type != manifest.command_type:
             error_message = (
-                f"Incoming request command_type {command_request.command_type} do not match "
-                f"manifest's command_type {manifest.command_type} for command "
-                f"{command_request.action}"
+                f"Incoming request command_type {command_request.command_type} "
+                f"do not match manifest's command_type {manifest.command_type} "
+                f"for command {command_request.action}"
             )
             _refuse_and_return(error_message)
 
@@ -171,7 +172,7 @@ class ControlInterface:
 
     def _handle_command_reply(self, response: bytes) -> None:
         command_reply: Optional[CommandReply] = CommandReply.from_bytes(response)
-        assert command_reply
+        assert command_reply  # noqa: S101
 
         tracked_request: TrackedRequest = self._request_tracker[command_reply.reply_id]
         tracked_request.reply = command_reply
@@ -180,7 +181,7 @@ class ControlInterface:
         command_received: Optional[CommandReceived] = CommandReceived.from_bytes(
             response
         )
-        assert command_received
+        assert command_received  # noqa: S101
 
         self._incoming_command_queue.put_nowait(command_received)
 
@@ -250,12 +251,12 @@ class ControlInterface:
                 with attempt:
                     command_received = self._incoming_command_queue.get(block=False)
         except RetryError:
-            raise NoCommandReceivedArrivedException()
+            raise NoCommandReceivedArrivedError() from None
 
-        assert command_received
+        assert command_received  # noqa: S101
 
         if not command_received.accepted:
-            raise CommnadNotAcceptedException(command_received.error_message)
+            raise CommnadNotAcceptedError(command_received.error_message)
 
         return request
 
@@ -311,10 +312,8 @@ class ControlInterface:
             CommnadType.WITH_DELAYED_REPLY,
         }:
             raise RuntimeError(
-                (
-                    f"Request {tracked_request.request} not expect a "
-                    f"reply, found reply {tracked_request.reply}"
-                )
+                f"Request {tracked_request.request} not expect a "
+                f"reply, found reply {tracked_request.reply}"
             )
 
         # check if reply was received
@@ -340,12 +339,12 @@ class ControlInterface:
             for attempt in Retrying(
                 stop=stop_after_delay(timeout),
                 wait=wait_fixed(WAIT_BETWEEN_CHECKS),
-                retry_error_cls=NoReplyException,
+                retry_error_cls=NoReplyError,
             ):
                 with attempt:
                     reply_received, result = self.check_for_reply(request.request_id)
                     if not reply_received:
-                        raise NoReplyException()
+                        raise NoReplyError()
 
                     return result
         except RetryError:

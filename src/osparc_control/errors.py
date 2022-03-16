@@ -1,18 +1,14 @@
-from typing import Any, Dict, List
-from osparc_control.models import CommandManifest
+class BaseControlError(Exception):
+    """inherited by all exceptions in this module"""
 
 
-class BaseControlException(Exception):
-    """inherited by all exceptions in this moduls"""
-
-
-class NoReplyException(BaseControlException):
+class NoReplyError(BaseControlError):
     """Used when retrying for a result"""
 
 
-class CommnadNotAcceptedException(BaseControlException):
+class CommnadNotAcceptedError(BaseControlError):
     """Command was not accepted by remote"""
 
 
-class NoCommandReceivedArrivedException(BaseControlException):
+class NoCommandReceivedArrivedError(BaseControlError):
     """Reply from remote host did not arrive in time"""

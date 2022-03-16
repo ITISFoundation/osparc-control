@@ -1,14 +1,12 @@
-from os import access
 from time import sleep
+
+from sidecar_solver import command_add
+from sidecar_solver import command_get_time
+from sidecar_solver import command_print_solver_status
+from sidecar_solver import control_interface
+
 from osparc_control.core import ControlInterface
 from osparc_control.models import CommandRequest
-
-from sidecar_solver import (
-    control_interface,
-    command_add,
-    command_get_time,
-    command_print_solver_status,
-)
 
 
 def handle_inputs(time_solver: "TimeSolver", request: CommandRequest) -> None:
@@ -44,7 +42,10 @@ class TimeSolver:
         self.can_continue: bool = True
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} time={self.time}, sleep_interval={self.sleep_internal}>"
+        return (
+            f"<{self.__class__.__name__} time={self.time}, "
+            f"sleep_interval={self.sleep_internal}>"
+        )
 
     def _add(self, a: float) -> float:
         return self.time + a

@@ -1,9 +1,15 @@
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
-from xml.dom import ValidationErr
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import umsgpack
-from pydantic import BaseModel, Extra, Field, PrivateAttr, validator
+from pydantic import BaseModel
+from pydantic import Extra
+from pydantic import Field
+from pydantic import PrivateAttr
+from pydantic import validator
 
 
 class CommandBase(BaseModel):
@@ -24,7 +30,9 @@ class CommandParameter(BaseModel):
     )
     description: str = Field(
         ...,
-        description="provide more information to the user, how this command should be used",
+        description=(
+            "provide more information to the user, how this command should be used"
+        ),
     )
 
 

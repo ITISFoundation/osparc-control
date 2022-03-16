@@ -1,5 +1,7 @@
-from queue import Empty, Queue
-from typing import Dict, Optional
+from queue import Empty
+from queue import Queue
+from typing import Dict
+from typing import Optional
 
 from .base_transport import BaseTransport
 

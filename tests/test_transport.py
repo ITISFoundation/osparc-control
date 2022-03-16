@@ -1,8 +1,10 @@
-from typing import Iterable, Type
+from typing import Iterable
+from typing import Type
 
 import pytest
 
-from osparc_control.transport.base_transport import BaseTransport, SenderReceiverPair
+from osparc_control.transport.base_transport import BaseTransport
+from osparc_control.transport.base_transport import SenderReceiverPair
 from osparc_control.transport.in_memory import InMemoryTransport
 from osparc_control.transport.zeromq import ZeroMQTransport
 
@@ -62,7 +64,7 @@ def test_send_receive_single_thread(sender_receiver_pair: SenderReceiverPair):
 
 
 def test_receive_nothing(sender_receiver_pair: SenderReceiverPair):
-    assert sender_receiver_pair.receive_bytes() == None
+    assert sender_receiver_pair.receive_bytes() is None
 
 
 def test_receive_returns_none_if_no_message_available():
