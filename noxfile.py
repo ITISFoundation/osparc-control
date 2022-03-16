@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from textwrap import dedent
 
-import nox
+import nox  # type: ignore
 
 try:
     from nox_poetry import Session, session
