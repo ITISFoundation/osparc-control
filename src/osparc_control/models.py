@@ -1,5 +1,7 @@
+from cgitb import handler
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
+from xml.dom import InvalidAccessErr
 
 import umsgpack
 from pydantic import BaseModel, Extra, Field
@@ -52,22 +54,13 @@ class CommandManifest(BaseModel):
     command_type: CommnadType = Field(
         ..., description="describes the command type, behaviour and usage"
     )
-
-    @classmethod
-    def create(
-        cls,
-        action: str,
-        description: str,
-        command_type: CommnadType,
-        params: Optional[List[CommandParameter]] = None,
-    ) -> "CommandManifest":
-        """define a request which requires a reply and awaits for the reply"""
-        return cls(
-            action=action,
-            description=description,
-            command_type=command_type,
-            params=[] if params is None else params,
-        )
+    handler: Optional[Callable] = Field(
+        None,
+        description=(
+            "if the user provides a callable it will be called to handle"
+            "incoming requests"
+        ),
+    )
 
 
 class CommandRequest(CommandBase):
@@ -77,25 +70,6 @@ class CommandRequest(CommandBase):
     command_type: CommnadType = Field(
         ..., description="describes the command type, behaviour and usage"
     )
-
-    @classmethod
-    def from_manifest(
-        cls,
-        manifest: CommandManifest,
-        request_id: str,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> "CommandRequest":
-        params = {} if params is None else params
-
-        if set(params.keys()) != {x.name for x in manifest.params}:
-            raise ValueError(f"Provided {params} did not match {manifest.params}")
-
-        return cls(
-            request_id=request_id,
-            action=manifest.action,
-            params=params,
-            command_type=manifest.command_type,
-        )
 
 
 class CommandReply(CommandBase):

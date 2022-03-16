@@ -28,11 +28,12 @@ PARAMS: List[Optional[List[CommandParameter]]] = [
 @pytest.mark.parametrize("params", PARAMS)
 def test_command_manifest(params: Optional[List[CommandParameter]]):
     for command_type in CommnadType:
-        assert CommandManifest.create(
+        assert CommandManifest(
             action="test",
             description="some test action",
             command_type=command_type,
-            params=params,
+            params=[] if params is None else params,
+            handler=None,
         )
 
 
@@ -41,38 +42,20 @@ def test_command(request_id: str, params: Optional[List[CommandParameter]]):
     request_params: Dict[str, Any] = (
         {} if params is None else {x.name: None for x in params}
     )
-    command = CommandManifest.create(
+    manifest = CommandManifest(
         action="test",
         description="some test action",
         command_type=CommnadType.WITHOUT_REPLY,
-        params=params,
+        params=[] if params is None else params,
+        handler=None,
     )
 
-    assert CommandRequest.from_manifest(
-        manifest=command, request_id=request_id, params=request_params
+    assert CommandRequest(
+        request_id=request_id,
+        action=manifest.action,
+        command_type=manifest.command_type,
+        params=request_params,
     )
-
-
-@pytest.mark.parametrize("params", PARAMS)
-def test_params_not_respecting_manifest(
-    request_id: str, params: Optional[List[CommandParameter]]
-):
-    command = CommandManifest.create(
-        action="test",
-        description="some test action",
-        command_type=CommnadType.WAIT_FOR_REPLY,
-        params=params,
-    )
-
-    if params:
-        with pytest.raises(ValueError):
-            assert CommandRequest.from_manifest(
-                manifest=command, request_id=request_id, params={}
-            )
-    else:
-        assert CommandRequest.from_manifest(
-            manifest=command, request_id=request_id, params={}
-        )
 
 
 @pytest.mark.parametrize("params", PARAMS)
@@ -83,15 +66,19 @@ def test_msgpack_serialization_deserialization(
     request_params: Dict[str, Any] = (
         {} if params is None else {x.name: None for x in params}
     )
-    manifest = CommandManifest.create(
+    manifest = CommandManifest(
         action="test",
         description="some test action",
         command_type=CommnadType.WAIT_FOR_REPLY,
-        params=params,
+        params=[] if params is None else params,
+        handler=None,
     )
 
-    command_request = CommandRequest.from_manifest(
-        manifest=manifest, request_id=request_id, params=request_params
+    command_request = CommandRequest(
+        request_id=request_id,
+        action=manifest.action,
+        command_type=manifest.command_type,
+        params=request_params,
     )
 
     assert command_request == CommandRequest.from_bytes(command_request.to_bytes())
