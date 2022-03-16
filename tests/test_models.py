@@ -3,10 +3,12 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 import umsgpack
+from pydantic import ValidationError
 
 from osparc_control.models import (
     CommandManifest,
     CommandParameter,
+    CommandAccepted,
     CommandReply,
     CommandRequest,
     CommnadType,
@@ -95,3 +97,21 @@ def test_command_reply_payloads_serialization_deserialization(
     command_reply = CommandReply(reply_id=request_id, payload=payload)
     assert command_reply
     assert command_reply == CommandReply.from_bytes(command_reply.to_bytes())
+
+
+def test_command_accepted_ok(request_id: str):
+    assert CommandAccepted(request_id=request_id, accepted=True, error_message=None)
+    assert CommandAccepted(
+        request_id=request_id, accepted=False, error_message="some error"
+    )
+
+
+def test_command_accepted_fails(request_id: str):
+    with pytest.raises(ValidationError):
+        assert CommandAccepted(
+            request_id=request_id, accepted=False, error_message=None
+        )
+    with pytest.raises(ValidationError):
+        assert CommandAccepted(
+            request_id=request_id, accepted=True, error_message="some error"
+        )

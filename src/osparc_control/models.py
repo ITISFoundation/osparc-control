@@ -1,10 +1,8 @@
-from cgitb import handler
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
-from xml.dom import InvalidAccessErr
 
 import umsgpack
-from pydantic import BaseModel, Extra, Field
+from pydantic import BaseModel, Extra, Field, validator
 
 
 class CommandBase(BaseModel):
@@ -36,9 +34,11 @@ class CommnadType(str, Enum):
     # no reply is expected for this command
     # nothing will be awaited
     WITHOUT_REPLY = "WITHOUT_REPLY"
+
     # a reply is expected and the user must check
     # for the results
     WITH_REPLAY = "WITH_REPLAY"
+
     # user requests a parameter that he would like to have
     # immediately, the request will be blocked until
     # a value is returned
@@ -70,6 +70,32 @@ class CommandRequest(CommandBase):
     command_type: CommnadType = Field(
         ..., description="describes the command type, behaviour and usage"
     )
+
+
+class CommandAccepted(CommandBase):
+    request_id: str = Field(..., description="unique identifier from request")
+    accepted: bool = Field(
+        ..., description="True if command is correctly formatted otherwise False"
+    )
+    error_message: Optional[str] = Field(
+        None,
+        description=(
+            "A mesage displayed to the user in case something went wrong. "
+            "Will always be present if accepted=False"
+        ),
+    )
+
+    @validator("error_message")
+    @classmethod
+    def error_message_present_if_not_accepted(
+        cls, v: str, values: Dict[str, Any]
+    ) -> Optional[str]:
+        if values["accepted"] is False and v is None:
+            raise ValueError("error_message must not be None when accepted is False")
+
+        if values["accepted"] is True and v is not None:
+            raise ValueError("error_message must be None when accepted is True")
+        return v
 
 
 class CommandReply(CommandBase):
