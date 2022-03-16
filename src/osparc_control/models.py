@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, List, Optional
 from xml.dom import ValidationErr
 
 import umsgpack
-from pydantic import BaseModel, Extra, Field, validator
+from pydantic import BaseModel, Extra, Field, PrivateAttr, validator
 
 
 class CommandBase(BaseModel):
@@ -47,6 +47,9 @@ class CommnadType(str, Enum):
 
 
 class CommandManifest(BaseModel):
+    # used internally
+    _remapped_params: Dict[str, CommandParameter] = PrivateAttr()
+
     action: str = Field(..., description="name of the action to be triggered on remote")
     description: str = Field(..., description="more details about the action")
     params: List[CommandParameter] = Field(
@@ -80,7 +83,7 @@ class CommandRequest(CommandBase):
     )
 
 
-class CommandAccepted(CommandBase):
+class CommandReceived(CommandBase):
     request_id: str = Field(..., description="unique identifier from request")
     accepted: bool = Field(
         ..., description="True if command is correctly formatted otherwise False"

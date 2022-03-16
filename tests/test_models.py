@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from osparc_control.models import (
     CommandManifest,
     CommandParameter,
-    CommandAccepted,
+    CommandReceived,
     CommandReply,
     CommandRequest,
     CommnadType,
@@ -100,19 +100,19 @@ def test_command_reply_payloads_serialization_deserialization(
 
 
 def test_command_accepted_ok(request_id: str):
-    assert CommandAccepted(request_id=request_id, accepted=True, error_message=None)
-    assert CommandAccepted(
+    assert CommandReceived(request_id=request_id, accepted=True, error_message=None)
+    assert CommandReceived(
         request_id=request_id, accepted=False, error_message="some error"
     )
 
 
 def test_command_accepted_fails(request_id: str):
     with pytest.raises(ValidationError):
-        assert CommandAccepted(
+        assert CommandReceived(
             request_id=request_id, accepted=False, error_message=None
         )
     with pytest.raises(ValidationError):
-        assert CommandAccepted(
+        assert CommandReceived(
             request_id=request_id, accepted=True, error_message="some error"
         )
 
