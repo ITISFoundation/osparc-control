@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
+from xml.dom import ValidationErr
 
 import umsgpack
 from pydantic import BaseModel, Extra, Field, validator
@@ -61,6 +62,13 @@ class CommandManifest(BaseModel):
             "incoming requests"
         ),
     )
+
+    @validator("params")
+    @classmethod
+    def ensure_unique_parameter_names(cls, v) -> List[CommandParameter]:
+        if len(v) != len({x.name for x in v}):
+            raise ValueError(f"Duplicate CommandParameter name found in {v}")
+        return v
 
 
 class CommandRequest(CommandBase):

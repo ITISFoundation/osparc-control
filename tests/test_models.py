@@ -115,3 +115,17 @@ def test_command_accepted_fails(request_id: str):
         assert CommandAccepted(
             request_id=request_id, accepted=True, error_message="some error"
         )
+
+
+def test_duplicate_command_parameter_name_in_manifest():
+    with pytest.raises(ValidationError):
+        CommandManifest(
+            action="test",
+            description="with invalid paramters",
+            params=[
+                CommandParameter(name="a", description="ok"),
+                CommandParameter(name="a", description="not allowed same name"),
+            ],
+            command_type=CommnadType.WITH_REPLAY,
+            handler=None,
+        )
