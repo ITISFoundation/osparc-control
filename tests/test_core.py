@@ -208,7 +208,7 @@ def test_command_params_mismatch(
         control_interface_a.request_without_reply("add_numbers", {"nope": 123})
 
 
-def test_side_b_does_not_reply_in_time(mock_wait_for_received: None):
+def test_side_b_does_not_reply_in_time(mock_wait_for_received: None) -> None:
     control_interface = _get_control_interface(8263, 8263, [])
     control_interface.start_background_sync()
     with pytest.raises(NoCommandReceivedArrivedError):
