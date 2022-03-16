@@ -31,10 +31,14 @@ def transport_class(request: SubRequest) -> Type[BaseTransport]:
 def sender_receiver_pair(
     transport_class: Type[BaseTransport],
 ) -> Iterable[SenderReceiverPair]:
+    sender: Optional[BaseTransport] = None
+    receiver: Optional[BaseTransport] = None
+
     if transport_class == InMemoryTransport:
         sender = transport_class("A", "B")  # type: ignore
         receiver = transport_class("B", "A")  # type: ignore
-    elif transport_class == ZeroMQTransport:
+
+    if transport_class == ZeroMQTransport:
         port = 1111
         sender = transport_class(  # type: ignore
             listen_port=port, remote_host="localhost", remote_port=port
@@ -43,6 +47,8 @@ def sender_receiver_pair(
             listen_port=port, remote_host="localhost", remote_port=port
         )
 
+    assert sender
+    assert receiver
     sender_receiver_pair = SenderReceiverPair(sender=sender, receiver=receiver)
 
     sender_receiver_pair.sender_init()
