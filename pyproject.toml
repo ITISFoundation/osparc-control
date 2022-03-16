@@ -61,8 +61,11 @@ branch = true
 source = ["osparc_control", "tests"]
 
 [tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover"
+]
 show_missing = true
-fail_under = 100
+fail_under = 99
 
 [tool.mypy]
 strict = true

@@ -14,7 +14,6 @@ from uuid import getnode
 from uuid import uuid4
 
 from pydantic import ValidationError
-from tenacity import RetryError
 from tenacity import Retrying
 from tenacity.stop import stop_after_delay
 from tenacity.wait import wait_fixed
@@ -123,7 +122,7 @@ class ControlInterface:
     def _handle_command_request(self, response: bytes) -> None:
         command_request: Optional[CommandRequest] = CommandRequest.from_bytes(response)
         if command_request is None:
-            return
+            return  # pragma: no cover
 
         def _refuse_and_return(error_message: str) -> None:
             self._out_queue.put(
@@ -255,7 +254,7 @@ class ControlInterface:
             ):
                 with attempt:
                     command_received = self._incoming_command_queue.get(block=False)
-        except RetryError:
+        except Empty:
             raise NoCommandReceivedArrivedError() from None
 
         assert command_received  # noqa: S101
@@ -310,13 +309,13 @@ class ControlInterface:
             request_id, None
         )
         if tracked_request is None:
-            return False, None
+            return False, None  # pragma: no cover
         # check for the correct type of request
         if tracked_request.request.command_type not in {
             CommnadType.WITH_IMMEDIATE_REPLY,
             CommnadType.WITH_DELAYED_REPLY,
         }:
-            raise RuntimeError(
+            raise RuntimeError(  # pragma: no cover
                 f"Request {tracked_request.request} not expect a "
                 f"reply, found reply {tracked_request.reply}"
             )
@@ -352,7 +351,7 @@ class ControlInterface:
                     reply_received, result = self.check_for_reply(request.request_id)
                     if not reply_received:
                         raise NoReplyError()
-        except RetryError:
+        except NoReplyError:
             pass
 
         return result
