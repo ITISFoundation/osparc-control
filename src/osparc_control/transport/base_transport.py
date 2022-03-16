@@ -3,7 +3,11 @@ from abc import abstractmethod
 from typing import Optional
 
 
-class BaseTransport(ABCMeta):
+class BaseTransportMeta(ABCMeta):
+    pass
+
+
+class BaseTransport(metaclass=BaseTransportMeta):
     @abstractmethod
     def send_bytes(self, payload: bytes) -> None:  # noqa: N804
         """sends bytes to remote"""

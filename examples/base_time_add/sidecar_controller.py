@@ -24,7 +24,7 @@ print("result of addition", result)
 # get_time
 
 print("getting solver time")
-solver_time = control_interface.request_with_immediate_reply("get_time", timeout=4.0)
+solver_time = control_interface.request_with_immediate_reply("get_time", timeout=1.0)
 print("solver time", solver_time)
 
 print("sending command to print internal status")

@@ -5,7 +5,7 @@ from typing import List
 from typing import Optional
 
 import pytest
-import umsgpack
+import umsgpack  # type: ignore
 from pydantic import ValidationError
 
 from osparc_control.models import CommandManifest
@@ -29,7 +29,7 @@ PARAMS: List[Optional[List[CommandParameter]]] = [
 
 
 @pytest.mark.parametrize("params", PARAMS)
-def test_command_manifest(params: Optional[List[CommandParameter]]):
+def test_command_manifest(params: Optional[List[CommandParameter]]) -> None:
     for command_type in CommnadType:
         assert CommandManifest(
             action="test",
@@ -40,7 +40,7 @@ def test_command_manifest(params: Optional[List[CommandParameter]]):
 
 
 @pytest.mark.parametrize("params", PARAMS)
-def test_command(request_id: str, params: Optional[List[CommandParameter]]):
+def test_command(request_id: str, params: Optional[List[CommandParameter]]) -> None:
     request_params: Dict[str, Any] = (
         {} if params is None else {x.name: None for x in params}
     )
@@ -62,7 +62,7 @@ def test_command(request_id: str, params: Optional[List[CommandParameter]]):
 @pytest.mark.parametrize("params", PARAMS)
 def test_msgpack_serialization_deserialization(
     request_id: str, params: Optional[List[CommandParameter]]
-):
+) -> None:
 
     request_params: Dict[str, Any] = (
         {} if params is None else {x.name: None for x in params}
@@ -91,20 +91,20 @@ def test_msgpack_serialization_deserialization(
 @pytest.mark.parametrize("payload", [None, "a_string", 1, 1.0, b"some_bytes"])
 def test_command_reply_payloads_serialization_deserialization(
     request_id: str, payload: Any
-):
+) -> None:
     command_reply = CommandReply(reply_id=request_id, payload=payload)
     assert command_reply
     assert command_reply == CommandReply.from_bytes(command_reply.to_bytes())
 
 
-def test_command_accepted_ok(request_id: str):
+def test_command_accepted_ok(request_id: str) -> None:
     assert CommandReceived(request_id=request_id, accepted=True, error_message=None)
     assert CommandReceived(
         request_id=request_id, accepted=False, error_message="some error"
     )
 
 
-def test_command_accepted_fails(request_id: str):
+def test_command_accepted_fails(request_id: str) -> None:
     with pytest.raises(ValidationError):
         assert CommandReceived(
             request_id=request_id, accepted=False, error_message=None
@@ -115,7 +115,7 @@ def test_command_accepted_fails(request_id: str):
         )
 
 
-def test_duplicate_command_parameter_name_in_manifest():
+def test_duplicate_command_parameter_name_in_manifest() -> None:
     with pytest.raises(ValidationError):
         CommandManifest(
             action="test",

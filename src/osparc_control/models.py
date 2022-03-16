@@ -4,7 +4,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
-import umsgpack
+import umsgpack  # type: ignore
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
@@ -14,7 +14,7 @@ from pydantic import validator
 
 class CommandBase(BaseModel):
     def to_bytes(self) -> bytes:
-        return umsgpack.packb(self.dict())
+        return umsgpack.packb(self.dict())  # type: ignore
 
     @classmethod
     def from_bytes(cls, raw: bytes) -> Optional[Any]:
@@ -65,7 +65,9 @@ class CommandManifest(BaseModel):
 
     @validator("params")
     @classmethod
-    def ensure_unique_parameter_names(cls, v) -> List[CommandParameter]:
+    def ensure_unique_parameter_names(
+        cls, v: List[CommandParameter]
+    ) -> List[CommandParameter]:
         if len(v) != len({x.name for x in v}):
             raise ValueError(f"Duplicate CommandParameter name found in {v}")
         return v

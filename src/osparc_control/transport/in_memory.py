@@ -6,7 +6,7 @@ from typing import Optional
 from .base_transport import BaseTransport
 
 
-class InMemoryTransport(metaclass=BaseTransport):
+class InMemoryTransport(BaseTransport):
     """
     Non blocking in memory implementation, working with queues.
     Can only be mixed with threading.
@@ -15,7 +15,7 @@ class InMemoryTransport(metaclass=BaseTransport):
     - fetches data from `source`
     """
 
-    _SHARED_QUEUES: Dict[str, Queue] = {}
+    _SHARED_QUEUES: Dict[str, "Queue[bytes]"] = {}
 
     def __init__(self, source: str, destination: str):
         self.source: str = source

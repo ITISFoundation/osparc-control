@@ -4,6 +4,7 @@ from queue import Queue
 from threading import Thread
 from time import sleep
 from typing import Any
+from typing import Deque
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -89,10 +90,12 @@ class ControlInterface:
 
         self._request_tracker: RequestsTracker = {}
         # NOTE: deque is thread safe only when used with appends and pops
-        self._incoming_request_tracker = deque()
+        self._incoming_request_tracker: Deque[CommandRequest] = deque()
 
-        self._out_queue: Queue = Queue()
-        self._incoming_command_queue: Queue = Queue()
+        self._out_queue: Queue[
+            Optional[Union[CommandRequest, CommandReceived, CommandReply]]
+        ] = Queue()
+        self._incoming_command_queue: Queue[Optional[CommandReceived]] = Queue()
 
         # sending and receiving threads
         self._sender_thread: Thread = Thread(target=self._sender_worker, daemon=True)
@@ -105,8 +108,9 @@ class ControlInterface:
         self._sender_receiver_pair.sender_init()
 
         while self._continue:
-            message = self._out_queue.get()
-            message: Optional[Union[CommandRequest, CommandReply]] = message
+            message: Optional[
+                Union[CommandRequest, CommandReceived, CommandReply]
+            ] = self._out_queue.get()
             if message is None:
                 # exit worker
                 break
@@ -118,12 +122,13 @@ class ControlInterface:
 
     def _handle_command_request(self, response: bytes) -> None:
         command_request: Optional[CommandRequest] = CommandRequest.from_bytes(response)
-        assert command_request  # noqa: S101
+        if command_request is None:
+            return
 
         def _refuse_and_return(error_message: str) -> None:
             self._out_queue.put(
                 CommandReceived(
-                    request_id=command_request.request_id,
+                    request_id=command_request.request_id,  # type: ignore
                     accepted=False,
                     error_message=error_message,
                 )
@@ -246,7 +251,7 @@ class ControlInterface:
             for attempt in Retrying(
                 stop=stop_after_delay(WAIT_FOR_RECEIVED),
                 wait=wait_fixed(WAIT_BETWEEN_CHECKS),
-                retry_error_cls=Empty,
+                retry_error_cls=Empty,  # type: ignore
             ):
                 with attempt:
                     command_received = self._incoming_command_queue.get(block=False)
@@ -335,24 +340,26 @@ class ControlInterface:
         """
         request = self._enqueue_call(action, params, CommnadType.WITH_IMMEDIATE_REPLY)
 
+        result: Optional[Any] = None
+
         try:
             for attempt in Retrying(
                 stop=stop_after_delay(timeout),
                 wait=wait_fixed(WAIT_BETWEEN_CHECKS),
-                retry_error_cls=NoReplyError,
+                retry_error_cls=NoReplyError,  # type: ignore
             ):
                 with attempt:
                     reply_received, result = self.check_for_reply(request.request_id)
                     if not reply_received:
                         raise NoReplyError()
-
-                    return result
         except RetryError:
-            return None
+            pass
+
+        return result
 
     def get_incoming_requests(self) -> List[CommandRequest]:
         """retruns all accumulated CommandRequests"""
-        results = deque()
+        results: Deque[CommandRequest] = deque()
 
         # fetch all elements empty
         # below implementation is thread-safe

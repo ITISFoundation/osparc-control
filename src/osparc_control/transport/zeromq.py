@@ -5,25 +5,27 @@ from tenacity import RetryError
 from tenacity import Retrying
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
+from zmq import Context
+from zmq import Socket
 
 from .base_transport import BaseTransport
 
 
-class ZeroMQTransport(metaclass=BaseTransport):
+class ZeroMQTransport(BaseTransport):
     def __init__(self, listen_port: int, remote_host: str, remote_port: int):
         self.listen_port: int = listen_port
         self.remote_host: str = remote_host
         self.remote_port: int = remote_port
 
-        self._recv_socket: Optional[zmq.socket.Socket] = None
-        self._send_socket: Optional[zmq.socket.Socket] = None
-        self._send_contex: Optional[zmq.context.Context] = None
-        self._recv_contex: Optional[zmq.context.Context] = None
+        self._recv_socket: Optional[Socket] = None
+        self._send_socket: Optional[Socket] = None
+        self._send_contex: Optional[Context] = None
+        self._recv_contex: Optional[Context] = None
 
     def send_bytes(self, payload: bytes) -> None:
         assert self._send_socket  # noqa: S101
 
-        self._send_socket.send(payload)
+        self._send_socket.send(payload)  # type: ignore
 
     def receive_bytes(
         self, retry_count: int = 3, wait_between: float = 0.01
@@ -33,34 +35,38 @@ class ZeroMQTransport(metaclass=BaseTransport):
         # try to fetch a message, usning unlocking sockets does not guarantee
         # that data is always present, retry 3 times in a short amount of time
         # this will guarantee the message arrives
+        message: Optional[bytes] = None
         try:
             for attempt in Retrying(
                 stop=stop_after_attempt(retry_count), wait=wait_fixed(wait_between)
             ):
                 with attempt:
-                    message: bytes = self._recv_socket.recv(zmq.NOBLOCK)
-                    return message
+                    message = self._recv_socket.recv(zmq.NOBLOCK)  # type: ignore
         except RetryError:
-            return None
+            pass
+
+        return message
 
     def sender_init(self) -> None:
-        self._send_contex = zmq.Context()
-        self._send_socket = self._send_contex.socket(zmq.PUSH)
-        self._send_socket.bind(f"tcp://*:{self.listen_port}")
+        self._send_contex = zmq.Context()  # type: ignore
+        self._send_socket = self._send_contex.socket(zmq.PUSH)  # type: ignore
+        self._send_socket.bind(f"tcp://*:{self.listen_port}")  # type: ignore
 
     def receiver_init(self) -> None:
-        self._recv_contex = zmq.Context()
-        self._recv_socket = self._recv_contex.socket(zmq.PULL)
-        self._recv_socket.connect(f"tcp://{self.remote_host}:{self.remote_port}")
+        self._recv_contex = zmq.Context()  # type: ignore
+        self._recv_socket = self._recv_contex.socket(zmq.PULL)  # type: ignore
+        self._recv_socket.connect(  # type: ignore
+            f"tcp://{self.remote_host}:{self.remote_port}"
+        )
 
     def sender_cleanup(self) -> None:
         assert self._send_socket  # noqa: S101
-        self._send_socket.close()
+        self._send_socket.close()  # type: ignore
         assert self._send_contex  # noqa: S101
-        self._send_contex.term()
+        self._send_contex.term()  # type: ignore
 
     def receiver_cleanup(self) -> None:
         assert self._recv_socket  # noqa: S101
-        self._recv_socket.close()
+        self._recv_socket.close()  # type: ignore
         assert self._recv_contex  # noqa: S101
-        self._recv_contex.term()
+        self._recv_contex.term()  # type: ignore

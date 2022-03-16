@@ -36,3 +36,7 @@ docs:	# runs and displays docs
 codestyle:	# runs codestyle enforcement
 	isort .
 	black .
+
+.PHONY: mypy
+mypy: # runs mypy
+	mypy src tests docs/conf.py
