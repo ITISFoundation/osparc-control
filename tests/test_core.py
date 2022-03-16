@@ -13,7 +13,7 @@ from osparc_control.models import CommandManifest
 from osparc_control.models import CommandParameter
 from osparc_control.models import CommnadType
 
-WAIT_FOR_DELIVERY = 0.01
+WAIT_FOR_DELIVERY = 0.1
 
 ALL_COMMAND_TYPES: List[CommnadType] = [
     CommnadType.WITH_DELAYED_REPLY,
