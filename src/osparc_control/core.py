@@ -275,20 +275,20 @@ class Engine:
         self._sender_thread.join()
         self._receiver_thread.join()
 
-    def request_and_forget(
+    def request_without_reply(
         self, action: str, params: Optional[Dict[str, Any]] = None
     ) -> None:
         """No reply will be provided by remote side for this command"""
         self._enqueue_call(action, params, CommnadType.WITHOUT_REPLY)
 
-    def request_and_check(
+    def request_with_delayed_reply(
         self, action: str, params: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         returns a `request_id` to be used with `check_for_reply` to monitor
         if a reply to the request was returned.
         """
-        request = self._enqueue_call(action, params, CommnadType.WITH_REPLAY)
+        request = self._enqueue_call(action, params, CommnadType.WITH_DELAYED_REPLY)
         return request.request_id
 
     def check_for_reply(self, request_id: str) -> Tuple[bool, Optional[Any]]:
@@ -307,8 +307,8 @@ class Engine:
             return False, None
         # check for the correct type of request
         if tracked_request.request.command_type not in {
-            CommnadType.WAIT_FOR_REPLY,
-            CommnadType.WITH_REPLAY,
+            CommnadType.WITH_IMMEDIATE_REPLY,
+            CommnadType.WITH_DELAYED_REPLY,
         }:
             raise RuntimeError(
                 (
@@ -323,7 +323,7 @@ class Engine:
 
         return True, tracked_request.reply.payload
 
-    def request_and_wait(
+    def request_with_immediate_reply(
         self,
         action: str,
         timeout: float,
@@ -334,7 +334,7 @@ class Engine:
         A timeout for this function is required. If the timeout is reached `None` will
         be returned.
         """
-        request = self._enqueue_call(action, params, CommnadType.WAIT_FOR_REPLY)
+        request = self._enqueue_call(action, params, CommnadType.WITH_IMMEDIATE_REPLY)
 
         try:
             for attempt in Retrying(

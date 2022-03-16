@@ -29,21 +29,17 @@ class CommandParameter(BaseModel):
 
 
 class CommnadType(str, Enum):
-    # NOTE: ANE -> KZ: can you please let me know if names and descriptions make sense?
-    # please suggest better ones
-
-    # no reply is expected for this command
-    # nothing will be awaited
+    # the command expects no reply
     WITHOUT_REPLY = "WITHOUT_REPLY"
 
-    # a reply is expected and the user must check
-    # for the results
-    WITH_REPLAY = "WITH_REPLAY"
+    # the command will provide a reply
+    # the suer is require to check for the results
+    # of this reply
+    WITH_DELAYED_REPLY = "WITH_DELAYED_REPLY"
 
-    # user requests a parameter that he would like to have
-    # immediately, the request will be blocked until
-    # a value is returned
-    WAIT_FOR_REPLY = "WAIT_FOR_REPLY"
+    # the command will return the result immediately
+    # and user code will be blocked until reply arrives
+    WITH_IMMEDIATE_REPLY = "WITH_IMMEDIATE_REPLY"
 
 
 class CommandManifest(BaseModel):

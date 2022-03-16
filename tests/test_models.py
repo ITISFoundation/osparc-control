@@ -69,7 +69,7 @@ def test_msgpack_serialization_deserialization(
     manifest = CommandManifest(
         action="test",
         description="some test action",
-        command_type=CommnadType.WAIT_FOR_REPLY,
+        command_type=CommnadType.WITH_IMMEDIATE_REPLY,
         params=[] if params is None else params,
     )
 
@@ -123,5 +123,5 @@ def test_duplicate_command_parameter_name_in_manifest():
                 CommandParameter(name="a", description="ok"),
                 CommandParameter(name="a", description="not allowed same name"),
             ],
-            command_type=CommnadType.WITH_REPLAY,
+            command_type=CommnadType.WITH_DELAYED_REPLY,
         )
