@@ -39,4 +39,4 @@ codestyle:	# runs codestyle enforcement
 
 .PHONY: mypy
 mypy: # runs mypy
-	mypy src tests docs/conf.py
+	nox -p 3.6 -r -s mypy
