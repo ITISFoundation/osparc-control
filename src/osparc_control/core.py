@@ -57,7 +57,7 @@ def _get_sender_receiver_pair(
     return SenderReceiverPair(sender=sender, receiver=receiver)
 
 
-class Engine:
+class ControlInterface:
     def __init__(
         self,
         remote_host: str,
