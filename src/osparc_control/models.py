@@ -36,7 +36,7 @@ class CommandParameter(BaseModel):
     )
 
 
-class CommnadType(str, Enum):
+class CommandType(str, Enum):
     # the command expects no reply
     WITHOUT_REPLY = "WITHOUT_REPLY"
 
@@ -60,7 +60,7 @@ class CommandManifest(BaseModel):
     params: List[CommandParameter] = Field(
         None, description="requested parameters by the user"
     )
-    command_type: CommnadType = Field(
+    command_type: CommandType = Field(
         ..., description="describes the command type, behaviour and usage"
     )
 
@@ -78,7 +78,7 @@ class CommandRequest(CommandBase):
     request_id: str = Field(..., description="unique identifier")
     action: str = Field(..., description="name of the action to be triggered on remote")
     params: Dict[str, Any] = Field({}, description="requested parameters by the user")
-    command_type: CommnadType = Field(
+    command_type: CommandType = Field(
         ..., description="describes the command type, behaviour and usage"
     )
 

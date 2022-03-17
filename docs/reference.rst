@@ -17,6 +17,6 @@ osparc_control
    :members:
    :undoc-members:
 
-.. autoclass:: osparc_control.CommnadType
+.. autoclass:: osparc_control.CommandType
    :members:
    :undoc-members:

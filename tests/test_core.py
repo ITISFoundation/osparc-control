@@ -11,14 +11,14 @@ from osparc_control.errors import CommnadNotAcceptedError
 from osparc_control.errors import NoCommandReceivedArrivedError
 from osparc_control.models import CommandManifest
 from osparc_control.models import CommandParameter
-from osparc_control.models import CommnadType
+from osparc_control.models import CommandType
 
 WAIT_FOR_DELIVERY = 0.1
 
-ALL_COMMAND_TYPES: List[CommnadType] = [
-    CommnadType.WITH_DELAYED_REPLY,
-    CommnadType.WITH_DELAYED_REPLY,
-    CommnadType.WITHOUT_REPLY,
+ALL_COMMAND_TYPES: List[CommandType] = [
+    CommandType.WITH_DELAYED_REPLY,
+    CommandType.WITH_DELAYED_REPLY,
+    CommandType.WITHOUT_REPLY,
 ]
 
 # UTILS
@@ -55,21 +55,21 @@ def mainfest_b() -> List[CommandManifest]:
             CommandParameter(name="a", description="param to add"),
             CommandParameter(name="b", description="param to add"),
         ],
-        command_type=CommnadType.WITH_DELAYED_REPLY,
+        command_type=CommandType.WITH_DELAYED_REPLY,
     )
 
     get_random = CommandManifest(
         action="get_random",
         description="returns a random number",
         params=[],
-        command_type=CommnadType.WITH_IMMEDIATE_REPLY,
+        command_type=CommandType.WITH_IMMEDIATE_REPLY,
     )
 
     greet_user = CommandManifest(
         action="greet_user",
         description="prints the status of the solver",
         params=[CommandParameter(name="name", description="name to greet")],
-        command_type=CommnadType.WITHOUT_REPLY,
+        command_type=CommandType.WITHOUT_REPLY,
     )
 
     return [add_numbers, get_random, greet_user]
@@ -178,7 +178,7 @@ def test_request_without_reply(
 
 
 @pytest.mark.parametrize("command_type", ALL_COMMAND_TYPES)
-def test_no_same_action_command_in_exposed_interface(command_type: CommnadType) -> None:
+def test_no_same_action_command_in_exposed_interface(command_type: CommandType) -> None:
     test_command_manifest = CommandManifest(
         action="test", description="test", params=[], command_type=command_type
     )

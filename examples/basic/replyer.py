@@ -3,7 +3,7 @@ import time
 
 from osparc_control import CommandManifest
 from osparc_control import CommandParameter
-from osparc_control import CommnadType
+from osparc_control import CommandType
 from osparc_control import ControlInterface
 
 random_in_range_manifest = CommandManifest(
@@ -13,7 +13,7 @@ random_in_range_manifest = CommandManifest(
         CommandParameter(name="a", description="lower bound for random numbers"),
         CommandParameter(name="b", description="upper bound for random numbers"),
     ],
-    command_type=CommnadType.WITH_IMMEDIATE_REPLY,
+    command_type=CommandType.WITH_IMMEDIATE_REPLY,
 )
 
 control_interface = ControlInterface(

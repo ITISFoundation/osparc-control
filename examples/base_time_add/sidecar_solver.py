@@ -1,6 +1,6 @@
 from osparc_control import CommandManifest
 from osparc_control import CommandParameter
-from osparc_control import CommnadType
+from osparc_control import CommandType
 from osparc_control import ControlInterface
 
 
@@ -10,21 +10,21 @@ command_add = CommandManifest(
     params=[
         CommandParameter(name="a", description="param to add to internal time"),
     ],
-    command_type=CommnadType.WITH_DELAYED_REPLY,
+    command_type=CommandType.WITH_DELAYED_REPLY,
 )
 
 command_get_time = CommandManifest(
     action="get_time",
     description="gets the time",
     params=[],
-    command_type=CommnadType.WITH_IMMEDIATE_REPLY,
+    command_type=CommandType.WITH_IMMEDIATE_REPLY,
 )
 
 command_print_solver_status = CommandManifest(
     action="print_status",
     description="prints the status of the solver",
     params=[],
-    command_type=CommnadType.WITHOUT_REPLY,
+    command_type=CommandType.WITHOUT_REPLY,
 )
 
 

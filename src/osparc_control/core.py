@@ -25,7 +25,7 @@ from .models import CommandManifest
 from .models import CommandReceived
 from .models import CommandReply
 from .models import CommandRequest
-from .models import CommnadType
+from .models import CommandType
 from .models import RequestsTracker
 from .models import TrackedRequest
 from .transport.base_transport import SenderReceiverPair
@@ -228,7 +228,7 @@ class ControlInterface:
         self,
         action: str,
         params: Optional[Dict[str, Any]],
-        expected_command_type: CommnadType,
+        expected_command_type: CommandType,
     ) -> CommandRequest:
         """validates and enqueues the call for delivery to remote"""
         request = CommandRequest(
@@ -284,7 +284,7 @@ class ControlInterface:
         self, action: str, params: Optional[Dict[str, Any]] = None
     ) -> None:
         """No reply will be provided by remote side for this command"""
-        self._enqueue_call(action, params, CommnadType.WITHOUT_REPLY)
+        self._enqueue_call(action, params, CommandType.WITHOUT_REPLY)
 
     def request_with_delayed_reply(
         self, action: str, params: Optional[Dict[str, Any]] = None
@@ -293,7 +293,7 @@ class ControlInterface:
         returns a `request_id` to be used with `check_for_reply` to monitor
         if a reply to the request was returned.
         """
-        request = self._enqueue_call(action, params, CommnadType.WITH_DELAYED_REPLY)
+        request = self._enqueue_call(action, params, CommandType.WITH_DELAYED_REPLY)
         return request.request_id
 
     def check_for_reply(self, request_id: str) -> Tuple[bool, Optional[Any]]:
@@ -312,8 +312,8 @@ class ControlInterface:
             return False, None  # pragma: no cover
         # check for the correct type of request
         if tracked_request.request.command_type not in {
-            CommnadType.WITH_IMMEDIATE_REPLY,
-            CommnadType.WITH_DELAYED_REPLY,
+            CommandType.WITH_IMMEDIATE_REPLY,
+            CommandType.WITH_DELAYED_REPLY,
         }:
             raise RuntimeError(  # pragma: no cover
                 f"Request {tracked_request.request} not expect a "
@@ -337,7 +337,7 @@ class ControlInterface:
         A timeout for this function is required. If the timeout is reached `None` will
         be returned.
         """
-        request = self._enqueue_call(action, params, CommnadType.WITH_IMMEDIATE_REPLY)
+        request = self._enqueue_call(action, params, CommandType.WITH_IMMEDIATE_REPLY)
 
         result: Optional[Any] = None
 
