@@ -41,12 +41,13 @@ class CommnadType(str, Enum):
     WITHOUT_REPLY = "WITHOUT_REPLY"
 
     # the command will provide a reply
-    # the suer is require to check for the results
+    # the user is require to check for the results
     # of this reply
     WITH_DELAYED_REPLY = "WITH_DELAYED_REPLY"
 
     # the command will return the result immediately
     # and user code will be blocked until reply arrives
+    # used for very fast replies (provide data which already exists)
     WITH_IMMEDIATE_REPLY = "WITH_IMMEDIATE_REPLY"
 
 
