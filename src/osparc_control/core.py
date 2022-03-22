@@ -69,6 +69,9 @@ class ControlInterface:
         listen_port: int = DEFAULT_LISTEN_PORT,
     ) -> None:
 
+        self.remote_host = remote_host
+        self.remote_port = remote_port
+
         self._sender_receiver_pair: SenderReceiverPair = _get_sender_receiver_pair(
             remote_host=remote_host, remote_port=remote_port, listen_port=listen_port
         )
@@ -102,6 +105,12 @@ class ControlInterface:
             target=self._receiver_worker, daemon=True
         )
         self._continue: bool = True
+
+    def __repr__(self) -> str:
+        return (
+            f"<{self.__class__.__name__} listening remote_host={self.remote_host}, "
+            f"on remote port={self.remote_port}>"
+        )
 
     def _sender_worker(self) -> None:
         self._sender_receiver_pair.sender_init()

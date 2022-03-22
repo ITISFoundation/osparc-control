@@ -4,6 +4,7 @@ from sidecar_solver import command_add
 from sidecar_solver import command_get_time
 from sidecar_solver import command_print_solver_status
 from sidecar_solver import control_interface
+from sidecar_solver import command_get_random_in_range
 
 from osparc_control.core import ControlInterface
 from osparc_control.models import CommandRequest
@@ -14,6 +15,13 @@ def handle_inputs(time_solver: "TimeSolver", request: CommandRequest) -> None:
         sum_result = time_solver._add(**request.params)
         time_solver.control_interface.reply_to_command(
             request_id=request.request_id, payload=sum_result
+        )
+        return
+
+    if request.action == command_get_random_in_range.action:
+        randv_result = time_solver._random_in_range(**request.params)
+        time_solver.control_interface.reply_to_command(
+            request_id=request.request_id, payload=randv_result
         )
         return
 
@@ -49,6 +57,10 @@ class TimeSolver:
 
     def _add(self, a: float) -> float:
         return self.time + a
+    
+    def _random_in_range(self, a: float, b:float) -> float:
+        import random
+        return random.uniform(a,b)
 
     def run(self) -> None:
         """main loop of the solver"""

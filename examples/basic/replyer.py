@@ -22,6 +22,7 @@ control_interface = ControlInterface(
     remote_port=2346,
     listen_port=2345,
 )
+
 control_interface.start_background_sync()
 
 wait_for_requests = True
@@ -34,9 +35,9 @@ while wait_for_requests:
             control_interface.reply_to_command(
                 request_id=command.request_id, payload=random_int
             )
-            wait_for_requests = False
+        wait_for_requests = False
 
 # allow for message to be delivered
-time.sleep(0.01)
+time.sleep(0.1)
 
 control_interface.stop_background_sync()

@@ -27,10 +27,20 @@ command_print_solver_status = CommandManifest(
     command_type=CommnadType.WITHOUT_REPLY,
 )
 
+command_get_random_in_range = CommandManifest(
+    action="random_in_range",
+    description="gives_random_number_in_range",
+    params=[
+        CommandParameter(name="a", description="lower bound of the range"),
+        CommandParameter(name="b", description="upper bound of the range")
+    ],
+    command_type=CommnadType.WITH_IMMEDIATE_REPLY,
+)
+
 
 control_interface = ControlInterface(
     remote_host="localhost",
-    exposed_interface=[command_add, command_get_time, command_print_solver_status],
+    exposed_interface=[command_add, command_get_time, command_print_solver_status, command_get_random_in_range],
     remote_port=1235,
     listen_port=1234,
 )

@@ -21,17 +21,23 @@ while not has_result:
 
 print("result of addition", result)
 
+# Get random value in range
+range_params = {"a": 1, "b": 3}
+print("Getting random value from range ", range_params)
+random_int = control_interface.request_with_immediate_reply(
+    "random_in_range", timeout=1.0, params=range_params
+)
+
+
+print("Random value: ", random_int)
+
 # get_time
 
 print("getting solver time")
 solver_time = control_interface.request_with_immediate_reply("get_time", timeout=1.0)
-random_int = control_interface.request_with_immediate_reply(
-    "random_in_range", timeout=1.0, params={"a": 1, "b": 3}
-)
 print("solver time", solver_time)
 
 print("sending command to print internal status")
 control_interface.request_without_reply("print_status")
-
 
 control_interface.stop_background_sync()
