@@ -31,19 +31,21 @@ class Controller:
 
         lasttime = 0
     
-        recindex = self.control_interface.request_with_immediate_reply("record", params={"record_what":"Tpoint"}, timeout=10.0)
+        self.control_interface.request_with_immediate_reply("start", params=[], timeout=10.0) # Give start signal
+        
+        #recindex = self.control_interface.request_with_immediate_reply("record", params={"record_what":"Tpoint"}, timeout=10.0)
         waittime = self.iteration_time
         #waitindex = control_interface.request_without_reply(waittime) # waitindex=self.controlled.wait_for_me_at(waittime)
 
         newset=self.initval
-        self.control_interface.request_without_reply("execute_instruction", 
+        self.control_interface.request_with_immediate_reply("execute_instruction", 
             params={"set_what": self.tweakparam_key,
             "set_val": newset,
-            "instruction_type": "set_now"})  
+            "instruction_type": "set_now"}, timeout=10.0)  
         
         while not self.is_finished():
-            self.wait_for_time(waittime,1000) #This also calls syncout and syncin -> Do we still need it?
-            retval = self.control_interface.request_with_immediate_reply("record", params={"record_what":self.regulationparam_key}, timeout=10.0) #Record the value we want to control
+            #self.wait_for_time(waittime,1000) #This also calls syncout and syncin -> Do we still need it?
+            retval = self.control_interface.request_with_immediate_reply("record", params={"record_what":self.regulationparam_key}, timeout=5.0) #Record the value we want to control
             #retval = self.control_interface.request_with_delay_reply("record", params={"record_what":self.regulationparam_key, "wait_time": waittime})
             if not retval:
                 error = error_prior
@@ -63,10 +65,10 @@ class Controller:
             output = self.KP*error + self.KI*integral + self.KD*derivative + bias
             newset = newset + output
             
-            self.control_interface.request_without_reply("execute_instruction", 
+            self.control_interface.request_with_immediate_reply("execute_instruction", 
                 params={"set_what": self.tweakparam_key,
                 "set_val": newset,
-                "instruction_type": "set_now"})
+                "instruction_type": "set_now"}, timeout=0.0)
 
             self.sets.append(newset)
 
@@ -76,6 +78,7 @@ class Controller:
        
             #recindex = control_interface.request_with_immediate_reply("record", params={"record_what":"Tpoint"}, timeout=10.0)
             #waitindex=self.controlled.continue_until(waittime,waitindex)
+            print(f"Controlled values are {self.controlledvals}")
             print(f"Errors are {self.errors}")
         return {"controlled value": self.controlled_vals, "error": self.errors, "set value": self.sets}
 

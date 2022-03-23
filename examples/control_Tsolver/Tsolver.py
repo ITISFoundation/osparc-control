@@ -20,9 +20,11 @@ class TSolver:
         
         self.T = Tinit
         self.t = 0
+
+        self.can_start = False
            
         # internal time tick
-        self.sleep_internal: float = 0.1
+        self.sleep_internal = self.dt
         #self.can_continue: bool = True # TODO: should we make this controllable?
 
     def __repr__(self) -> str:
@@ -32,9 +34,11 @@ class TSolver:
         )
     
     def run(self):
+        self.wait_for_start_signal()
 
         """main loop of the solver"""
         while self.t < self.tend:
+            print(f"Time is {self.t} requests are {self.control_interface.get_incoming_requests()}")
             for request in self.control_interface.get_incoming_requests():
                 process_requests(self, request)
 
@@ -44,16 +48,31 @@ class TSolver:
 
             # process internal stuff
             self.t += self.dt
-            sleep(self.sleep_internal)
+            #sleep(self.sleep_internal)
+        return self.T
+    
+    def wait_for_start_signal(self):
+        while not self.can_start:
+            print(f"Can start signal is {self.can_start}")
+            sleep(0.1)
+            for request in self.control_interface.get_incoming_requests():
+                if request.action == "start":
+                    print("Found start signal")
+                    self.can_start = True
+        #return self.can_start
 
     def record(self, comm_record):
         #while (not control_interface) and (control_interface.get_incoming_requests[-1].time): TODo: do we have to check something here?
         if comm_record.params["record_what"] == "Tpoint":
             rec_x, rec_y = 10,10 # TODO: makes this an argument
+            print(f"At t={self.t} Tpoint value is {self.T[rec_x,rec_y]}")
             return [self.t, self.T[rec_x,rec_y]]
 
         #self.sidecar.t=t TODO: do we need this?
-    
+
+    def start(self):
+        self.can_start = True
+
     def is_finished(self):
         if self.t >= self.tend: #TODO: or it received a stop signal
             return True
@@ -66,7 +85,31 @@ class TSolver:
                 print(f"Setting sourcescale value to {instr_request.params['set_val']}")
                 self.sourcescale = instr_request.params["set_val"]
 
+def process_requests(T_solver: "TSolver", request: CommandRequest) -> None:
+    # process incoming requests from remote
+    print("Processing incoming requests...")
+    if request.action == "record":
+        ret_vals = T_solver.record(request)
+        T_solver.control_interface.reply_to_command(
+            request_id=request.request_id, payload=ret_vals,
+        )
+    if request.action == "is_finished":
+        ret = T_solver.is_finished()
+        T_solver.control_interface.reply_to_command(
+            request_id=request.request_id, payload=ret,
+        )
+
+    if request.action == "execute_instruction":
+        T_solver.execute_instruction(request)
+
 def define_commands(): # TODO: could be moved to external "config file" and this becomes a reader
+
+    command_start = CommandManifest(
+    action="start",
+    description="Gives start signal",
+    params=[],
+    command_type=CommnadType.WITH_IMMEDIATE_REPLY,
+    )
 
     command_record_now = CommandManifest(
     action="record",
@@ -92,25 +135,9 @@ def define_commands(): # TODO: could be moved to external "config file" and this
             CommandParameter(name="set_val", description="Value to set"),
             CommandParameter(name="instruction_type", description="Type of instruction to execute")
             ],
-        command_type = CommnadType.WITHOUT_REPLY
+        command_type = CommnadType.WITH_IMMEDIATE_REPLY
     )
-    return [command_record_now, get_finished_status, command_exec_instruction]
-
-def process_requests(T_solver: "TSolver", request: CommandRequest) -> None:
-    # process incoming requests from remote
-    print("Processing incoming requests...")
-    if request.action == "record":
-        ret_vals = T_solver.record(request)
-        T_solver.control_interface.reply_to_command(
-            request_id=request.request_id, payload=ret_vals,
-        )
-    if request.action == "is_finished":
-        ret = T_solver.is_finished()
-        T_solver.control_interface.reply_to_command(
-            request_id=request.request_id, payload=ret,
-        )
-    if request.action == "execute_instruction":
-        T_solver.execute_instruction(request)
+    return [command_start, command_record_now, get_finished_status, command_exec_instruction]
 
 
 def main() -> None:
@@ -124,7 +151,7 @@ def main() -> None:
 )
     control_interface.start_background_sync()
 
-    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=80
+    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=50
     solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, tend, control_interface=control_interface)
     solver.run()
 
