@@ -1,9 +1,10 @@
-from osparc_control import ControlInterface
-from osparc_control import CommandManifest, CommandParameter, CommnadType
+
+from osparc_control import CommandManifest, CommandParameter, CommnadType, ControlInterface
 from osparc_control.models import CommandRequest
 
-import numpy as np
 import time
+import numpy as np 
+import matplotlib.pyplot as plt
 
 from Tsolver_sidecar import SideCar
 
@@ -40,6 +41,7 @@ class Controller:
         self.sets=[]
         self.controlledvals=[]
         lasttime=0
+
         while not self.controlled.endsignal:
             self.controlled.wait_for_time(waittime,1000)
             get1=self.controlled.get(recindex)
@@ -66,10 +68,16 @@ class Controller:
             recindex=self.controlled.record(self.regulationparam_key,waittime,self.regulationparam_otherparams)
             waitindex=self.controlled.continue_until(waittime,waitindex)
             print(self.controlled.finished())
+        return {"set value":self.sets, "errors": self.errors, "controlled value": self.controlledvals}
+
+def plot(out_dict):
+    fig, ax = plt.subplots(3)
+    for i, (key, val) in enumerate(out_dict.items()):
+        ax[i].plot(val, marker="o")
+        ax[i].set_title(key)
+    fig.savefig("controller_plot.png")
 
 def main() -> None:
-
- 
     command_data = CommandManifest(
     action="command_data",
     description="receive some stuff",
@@ -91,12 +99,11 @@ def main() -> None:
     control_interface.start_background_sync()
     sidecar = SideCar(control_interface, "REQUESTER")
 
-    #n=20; Tinit=np.zeros((n,n), float); Tsource=np.ones((n-2,n-2), float)
     controller = Controller('sourcescale', 1, 'Tpoint', [10,10], 4, 10, 0.01, 0.00, 0, sidecar)
     out = controller.run()
-    print(out)
     control_interface.stop_background_sync()
 
+    plot(out)
 
 if __name__ == "__main__":
     main()

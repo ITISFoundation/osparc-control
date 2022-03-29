@@ -1,5 +1,6 @@
 from operator import truediv
 from osparc_control.core import _generate_request_id
+from osparc_control.errors import NoCommandReceivedArrivedError
 import random
 import time
 
@@ -59,6 +60,7 @@ class KindOfPriorityQueue():
     def empty(self):
         return not self.myqueue
 
+        
 class SideCar:
     def __init__(self, interface, io):
         self.t=0
@@ -134,19 +136,19 @@ class SideCar:
     def wait_for_time(self,waittime,maxcount):
         counter=0;
         while self.t<waittime and counter<maxcount:
-            self.syncout()
-            self.syncin()
+            self.sync()
+            self.sync()
             self.wait_a_bit()
             counter+=1
         if self.t<waittime:
             print('timeout')
 
     def get_wait_status(self, t):
-        self.syncout()
+        self.sync()
         # print(self.waitqueue.myqueue)
         if (not self.waitqueue.empty()) and (self.waitqueue.first()[0] <= t):
             self.pause()
-            self.syncin()
+            self.sync()
             return True
         else:
             self.release()
@@ -218,47 +220,46 @@ class SideCar:
     def pause(self):
         if (not self.paused) or (not self.startsignal):
             self.paused=True
-            self.syncout()
+            self.sync()
         
     def release(self):
         if self.paused:
-            self.syncin()
+            self.sync()
             self.paused=False 
-            self.syncout()
+            self.sync()
 
     def finished(self):
         return self.endsignal;
 
-    def syncin(self):
+    def sync(self):
         if self.io == "RESPONDER":
             inputdata = None
             commands = self.interface.get_incoming_requests()
             for command in commands:
-                # print("received " + str(command))
-                if command.action == "command_generic":
+                if command.action == "command_instruct":
                     inputdata = command.params
                     print(str(inputdata))
+                elif command.action == "command_retrieve":
+                    outputdata={'t':self.t, 'endsignal':self.endsignal, 'paused':self.paused, 'records':self.records} # start?
+                    self.interface.request_without_reply(
+                        "command_data", params=outputdata
+                    )
+                    print("got retrieve")
                 if inputdata != None:
                     self.instructions=inputdata['instructions']
                     self.executeInstructions()
                     print("Successfully executed " + str(inputdata))
-        elif self.io == "REQUESTER":
-            outputdata={'instructions':self.instructions}
-            self.interface.request_without_reply(
-                "command_generic", params=outputdata
-            )
-        else:
-            print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
-            return-1
 
+        elif self.io == "REQUESTER": 
+            if self.instructions:
+                outputdata={'instructions':self.instructions}
+                self.interface.request_without_reply(
+                    "command_instruct", params=outputdata
+                )
+            self.interface.request_without_reply("command_retrieve")
+            print("asked to get state...")
 
-    def syncout(self):
-        if self.io == "RESPONDER":
-            outputdata={'t':self.t, 'endsignal':self.endsignal, 'paused':self.paused, 'records':self.records} # start?
-            self.interface.request_without_reply(
-                "command_data", params=outputdata
-            )
-        elif self.io == "REQUESTER":
+            inputdata = None        
             commands = self.interface.get_incoming_requests()
             for command in commands:
                 if command.action == "command_data":
@@ -270,7 +271,19 @@ class SideCar:
                     print(self.t)
         else:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
-            return-1            
+            return-1
+
+           
+
+    def finish(self):
+            self.waitqueue.deleteall();
+            self.endsignal=True; #make function for this and the next line
+
+            self.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
+            outputdata={'t':self.t, 'endsignal':self.endsignal, 'paused':self.paused, 'records':self.records} # start?
+            self.interface.request_without_reply(
+                "command_data", params=outputdata
+            ) 
 
     def executeInstructions(self):
         l=len(self.instructions)

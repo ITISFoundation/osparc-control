@@ -1,10 +1,8 @@
 import time
-
-
-from osparc_control.core import ControlInterface
-from osparc_control import CommandManifest, CommandParameter, CommnadType
+from osparc_control import CommandManifest, CommandParameter, CommnadType, ControlInterface
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from Tsolver_sidecar import SideCar
 
@@ -33,8 +31,8 @@ class TSolver:
             self.wait_if_necessary(self.t)
             self.apply_set(self.t)  
             n=self.n
-            diffusion=self.k/(self.dx*self.dx) * (self.T[:n-2,1:n-1]+self.T[1:n-1,:n-2]+self.T[2:n,1:n-1]+self.T[1:n-1,2:n]-4*self.T[1:n-1,1:n-1]);
-            self.T[1:n-1,1:n-1]=self.T[1:n-1,1:n-1]+self.dt*(self.sourcescale*self.Tsource+diffusion);
+            diffusion=self.k/(self.dx*self.dx) * (self.T[:n-2,1:n-1]+self.T[1:n-1,:n-2]+self.T[2:n,1:n-1]+self.T[1:n-1,2:n]-4*self.T[1:n-1,1:n-1])
+            self.T[1:n-1,1:n-1]=self.T[1:n-1,1:n-1]+self.dt*(self.sourcescale*self.Tsource+diffusion)
             self.t=self.t+self.dt
 
         self.finish()
@@ -53,14 +51,14 @@ class TSolver:
         while not self.sidecar.startsignal:
         # while not self.sidecar.started():
             self.wait_a_bit()
-            self.sidecar.syncin()
+            self.sidecar.sync()
         self.sidecar.release()
 
     def finish(self):
         self.record(float("inf"))
-        self.sidecar.waitqueue.deleteall()
-        self.sidecar.endsignal=True; #make function for this and the next line
-        self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
+        self.sidecar.finish()
+        #self.sidecar.endsignal=True; #make function for this and the next line
+        #self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
 
     def record(self,t):
         while (not self.sidecar.recordqueue.empty()) and self.sidecar.recordqueue.first()[0] <= t:
@@ -90,36 +88,52 @@ class TSolver:
             elif set1[0]=='tend':
                 self.tend=set1[1]
 
+def plot(out):
+    fig, ax = plt.subplots()
+    ax.set_aspect('equal')
+    im = ax.imshow(out)
+    fig.colorbar(im)
+    fig.savefig("tsolver_plot.png")
 
 def main() -> None:
 
-    command_generic = CommandManifest(
-    action="command_generic",
-    description="send some stuff",
+    command_instruct = CommandManifest(
+    action="command_instruct",
+    description="Execute Instructions",
     params=[
-        CommandParameter(name="instructions", description="some instructions")
+        CommandParameter(name="instructions", description="Instructions for execution.")
     ],
-    command_type=CommnadType.WITHOUT_REPLY,
-)   
+    command_type=CommnadType.WITHOUT_REPLY)
+
+    command_retrieve = CommandManifest(
+    action="command_retrieve",
+    description="gets state",
+    params=[],
+    command_type=CommnadType.WITHOUT_REPLY)   
+
+ 
 
     control_interface = ControlInterface(
     remote_host="localhost",
-    exposed_interface=[command_generic],
+    exposed_interface=[command_instruct, command_retrieve],
     remote_port=1234,
-    listen_port=1235,
-)
+    listen_port=1235)
+
     control_interface.start_background_sync()
     sidecar = SideCar(control_interface, "RESPONDER")
     sidecar.canbegotten = ['Tpoint', 'Tvol']
     sidecar.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
 
-    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=50
+    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=500
     solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, tend, sidecar)
 
     out = solver.run()
+    
     print(out[10,10])
+    
+    time.sleep(1)
     control_interface.stop_background_sync()
-
+    plot(out)
 
 if __name__ == "__main__":
     main()
