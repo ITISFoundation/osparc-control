@@ -1,13 +1,17 @@
-from time import sleep
+import time
 
-from osparc_control import CommandManifest, CommandParameter, CommnadType
+
 from osparc_control.core import ControlInterface
-from osparc_control.models import CommandRequest
+from osparc_control import CommandManifest, CommandParameter, CommnadType
+
 import numpy as np
 
+from Tsolver_sidecar import SideCar
 
 class TSolver:
-    def __init__(self, dx, n, Tinit, dt, Tsource, k, sourcescale, tend, control_interface):
+    def __init__(self, dx, n, Tinit, dt, Tsource, k, sourcescale, tend, sidecar):
+        self.T = Tinit
+        self.t = 0
         self.dx = dx
         self.n = n
         self.Tinit = Tinit
@@ -16,145 +20,104 @@ class TSolver:
         self.k = k
         self.sourcescale = sourcescale
         self.tend = tend
-        self.control_interface = control_interface
-        
-        self.T = Tinit
-        self.t = 0
+        self.sidecar = sidecar
 
-        self.can_start = False
-           
-        # internal time tick
-        self.sleep_internal = self.dt
-        #self.can_continue: bool = True # TODO: should we make this controllable?
-
-    def __repr__(self) -> str:
-        return (
-            f"<{self.__class__.__name__} time={self.time}, "
-            f"sleep_interval={self.sleep_internal}>"
-        )
-    
     def run(self):
         self.wait_for_start_signal()
-
-        """main loop of the solver"""
-        while self.t < self.tend:
-            print(f"Time is {self.t} requests are {self.control_interface.get_incoming_requests()}")
-            for request in self.control_interface.get_incoming_requests():
-                process_requests(self, request)
-
-            diffusion=self.k/(self.dx*self.dx) * (self.T[:self.n-2,1:self.n-1]+self.T[1:self.n-1,:self.n-2]+self.T[2:self.n,1:self.n-1]+self.T[1:self.n-1,2:self.n]-4*self.T[1:self.n-1,1:self.n-1])
-            self.T[1:self.n-1,1:self.n-1]=self.T[1:self.n-1,1:self.n-1]+self.dt*(self.sourcescale*self.Tsource+diffusion)
+        self.record(self.t)
+        self.apply_set(self.t)
+ 
+        while self.t<self.tend:
+            print(self.t)
+            self.record(self.t)
+            self.wait_if_necessary(self.t)
+            self.apply_set(self.t)  
+            n=self.n
+            diffusion=self.k/(self.dx*self.dx) * (self.T[:n-2,1:n-1]+self.T[1:n-1,:n-2]+self.T[2:n,1:n-1]+self.T[1:n-1,2:n]-4*self.T[1:n-1,1:n-1]);
+            self.T[1:n-1,1:n-1]=self.T[1:n-1,1:n-1]+self.dt*(self.sourcescale*self.Tsource+diffusion);
             self.t=self.t+self.dt
 
-            # process internal stuff
-            self.t += self.dt
-            #sleep(self.sleep_internal)
+        self.finish()
         return self.T
     
+    def wait_a_bit(self):
+        time.sleep(0.05)
+        
+    def wait_if_necessary(self,t): #move what is possible into the sidecar
+        while self.sidecar.get_wait_status(t):
+            print("triggered wait_if_necessary")
+            self.wait_a_bit()
+
+
     def wait_for_start_signal(self):
-        while not self.can_start:
-            print(f"Can start signal is {self.can_start}")
-            sleep(0.1)
-            for request in self.control_interface.get_incoming_requests():
-                if request.action == "start":
-                    print("Found start signal")
-                    self.can_start = True
-        #return self.can_start
+        while not self.sidecar.startsignal:
+        # while not self.sidecar.started():
+            self.wait_a_bit()
+            self.sidecar.syncin()
+        self.sidecar.release()
 
-    def record(self, comm_record):
-        #while (not control_interface) and (control_interface.get_incoming_requests[-1].time): TODo: do we have to check something here?
-        if comm_record.params["record_what"] == "Tpoint":
-            rec_x, rec_y = 10,10 # TODO: makes this an argument
-            print(f"At t={self.t} Tpoint value is {self.T[rec_x,rec_y]}")
-            return [self.t, self.T[rec_x,rec_y]]
+    def finish(self):
+        self.record(float("inf"))
+        self.sidecar.waitqueue.deleteall()
+        self.sidecar.endsignal=True; #make function for this and the next line
+        self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
 
-        #self.sidecar.t=t TODO: do we need this?
+    def record(self,t):
+        while (not self.sidecar.recordqueue.empty()) and self.sidecar.recordqueue.first()[0] <= t:
+            pop1=self.sidecar.recordqueue.pop()
+            recindex=pop1[1]
+            rec1=pop1[2]
+            if rec1[0]=='Tpoint':
+                self.sidecar.records[recindex].append((t,self.T[rec1[1][0],rec1[1][1]]))
+            elif rec1[0]=='Tvol':
+                self.sidecar.records[recindex].append((t,self.T[rec1[1][0]:rec1[1][2],rec1[1][1]:rec1[1][3]]))
+        self.sidecar.t=t
 
-    def start(self):
-        self.can_start = True
-
-    def is_finished(self):
-        if self.t >= self.tend: #TODO: or it received a stop signal
-            return True
-        else:
-            return False
-
-    def execute_instruction(self, instr_request):
-        if instr_request.params["instruction_type"] == "set_now": # TODO implement others and maybe move out of Tsolver class
-            if instr_request.params["set_what"] == "sourcescale":
-                print(f"Setting sourcescale value to {instr_request.params['set_val']}")
-                self.sourcescale = instr_request.params["set_val"]
-
-def process_requests(T_solver: "TSolver", request: CommandRequest) -> None:
-    # process incoming requests from remote
-    print("Processing incoming requests...")
-    if request.action == "record":
-        ret_vals = T_solver.record(request)
-        T_solver.control_interface.reply_to_command(
-            request_id=request.request_id, payload=ret_vals,
-        )
-    if request.action == "is_finished":
-        ret = T_solver.is_finished()
-        T_solver.control_interface.reply_to_command(
-            request_id=request.request_id, payload=ret,
-        )
-
-    if request.action == "execute_instruction":
-        T_solver.execute_instruction(request)
-
-def define_commands(): # TODO: could be moved to external "config file" and this becomes a reader
-
-    command_start = CommandManifest(
-    action="start",
-    description="Gives start signal",
-    params=[],
-    command_type=CommnadType.WITH_IMMEDIATE_REPLY,
-    )
-
-    command_record_now = CommandManifest(
-    action="record",
-    description="Records some variables at current time",
-    params=[
-        CommandParameter(name="record_what", description="Name of the variable to record"),
-        #CommandParameter(name="Tvol", description="upper bound for random numbers"), TODO: implement
-    ],
-    command_type=CommnadType.WITH_IMMEDIATE_REPLY,
-    )
-
-    get_finished_status = CommandManifest(
-    action = "is_finished",
-    params = [],
-    description = "Check if simulation is finished",
-    command_type = CommnadType.WITH_IMMEDIATE_REPLY)
-
-    command_exec_instruction = CommandManifest(
-        action="execute_instruction",
-        description="Applies a command to the solver",
-        params =[
-            CommandParameter(name="set_what", description="Name of the variable to set"),
-            CommandParameter(name="set_val", description="Value to set"),
-            CommandParameter(name="instruction_type", description="Type of instruction to execute")
-            ],
-        command_type = CommnadType.WITH_IMMEDIATE_REPLY
-    )
-    return [command_start, command_record_now, get_finished_status, command_exec_instruction]
+    def apply_set(self,t):
+        while (not self.sidecar.setqueue.empty()) and self.sidecar.setqueue.first()[0] <= t:
+            set1=self.sidecar.setqueue.pop()[2]
+            if set1[0]=='Tsource':
+                if set1[1].shape==Tsource.shape:
+                    self.Tsource=set1[1]
+            elif set1[0]=='SARsource':
+                if set1[1].shape==Tsource.shape:
+                    self.Tsource=set1[1]/heatcapacity
+            elif set1[0]=='k':
+                if set1[1]>0:
+                    self.set_k(set1[1])
+            elif set1[0]=='sourcescale':
+                self.sourcescale=set1[1]
+            elif set1[0]=='tend':
+                self.tend=set1[1]
 
 
 def main() -> None:
-    commands = define_commands()
-    
+
+    command_generic = CommandManifest(
+    action="command_generic",
+    description="send some stuff",
+    params=[
+        CommandParameter(name="instructions", description="some instructions")
+    ],
+    command_type=CommnadType.WITHOUT_REPLY,
+)   
+
     control_interface = ControlInterface(
     remote_host="localhost",
-    exposed_interface=commands,
+    exposed_interface=[command_generic],
     remote_port=1234,
     listen_port=1235,
 )
     control_interface.start_background_sync()
+    sidecar = SideCar(control_interface, "RESPONDER")
+    sidecar.canbegotten = ['Tpoint', 'Tvol']
+    sidecar.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
 
     n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=50
-    solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, tend, control_interface=control_interface)
-    solver.run()
+    solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, tend, sidecar)
 
+    out = solver.run()
+    print(out[10,10])
     control_interface.stop_background_sync()
 
 
