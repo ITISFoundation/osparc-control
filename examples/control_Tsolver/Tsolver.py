@@ -95,8 +95,7 @@ def plot(out):
     fig.colorbar(im)
     fig.savefig("tsolver_plot.png")
 
-def main() -> None:
-
+if __name__ == "__main__":
     command_instruct = CommandManifest(
     action="command_instruct",
     description="Execute Instructions",
@@ -111,8 +110,6 @@ def main() -> None:
     params=[],
     command_type=CommnadType.WITHOUT_REPLY)   
 
- 
-
     control_interface = ControlInterface(
     remote_host="localhost",
     exposed_interface=[command_instruct, command_retrieve],
@@ -124,7 +121,7 @@ def main() -> None:
     sidecar.canbegotten = ['Tpoint', 'Tvol']
     sidecar.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
 
-    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=500
+    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=50
     solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, tend, sidecar)
 
     out = solver.run()
@@ -134,6 +131,3 @@ def main() -> None:
     time.sleep(1)
     control_interface.stop_background_sync()
     plot(out)
-
-if __name__ == "__main__":
-    main()

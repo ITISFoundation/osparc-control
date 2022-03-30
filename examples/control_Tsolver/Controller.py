@@ -77,7 +77,7 @@ def plot(out_dict):
         ax[i].set_title(key)
     fig.savefig("controller_plot.png")
 
-def main() -> None:
+if __name__ == "__main__":
     command_data = CommandManifest(
     action="command_data",
     description="receive some stuff",
@@ -88,14 +88,14 @@ def main() -> None:
         CommandParameter(name='records', description="some records")
     ],
     command_type=CommnadType.WITHOUT_REPLY,
-)
+   )
 
     control_interface = ControlInterface(
     remote_host="localhost",
     exposed_interface=[command_data],
     remote_port=1235,
     listen_port=1234,
-)
+   )
     control_interface.start_background_sync()
     sidecar = SideCar(control_interface, "REQUESTER")
 
@@ -105,16 +105,5 @@ def main() -> None:
 
     plot(out)
 
-if __name__ == "__main__":
-    main()
 
 
-# Example
-# get_time and a variable
-#print("Getting T variable and time")
-#send_requests = True
-#while send_requests:
-#    retvals = control_interface.request_with_immediate_reply("record", params={"record_what":"Tpoint"}, timeout=10.0)
-#    print("Returned values", retvals)
-
-#control_interface.stop_background_sync()

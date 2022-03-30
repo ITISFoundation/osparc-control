@@ -137,7 +137,7 @@ class SideCar:
         counter=0;
         while self.t<waittime and counter<maxcount:
             self.sync()
-            self.sync()
+            #self.sync()
             self.wait_a_bit()
             counter+=1
         if self.t<waittime:
@@ -153,18 +153,6 @@ class SideCar:
         else:
             self.release()
             return False
-
-    # def started(self):
-    #     if not self.startsignal:
-    #         self.syncin()
-    #         self.syncout()
-    #         return True
-    #     else:
-    #         self.release()
-    #         return False
-
-    def get_time(self):
-        return self.t;
 
     def wait_for_me_at(self,t,index=None):
         if self.io == "RESPONDER":
