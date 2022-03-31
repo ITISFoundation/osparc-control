@@ -73,13 +73,13 @@ class ControlInterface:
             remote_host=remote_host, remote_port=remote_port, listen_port=listen_port
         )
 
-        def _process_manifest(manifest: CommandManifest) -> CommandManifest:
+        def _update_remapped_params(manifest: CommandManifest) -> CommandManifest:
             manifest._remapped_params = {x.name: x for x in manifest.params}
             return manifest
 
-        # map by action name for
+        # map action to the final version of the manifest
         self._exposed_interface: Dict[str, CommandManifest] = {
-            x.action: _process_manifest(x) for x in exposed_interface
+            x.action: _update_remapped_params(x) for x in exposed_interface
         }
         if len(self._exposed_interface) != len(exposed_interface):
             raise ValueError(
