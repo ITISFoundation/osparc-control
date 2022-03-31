@@ -96,6 +96,11 @@ def mock_wait_for_received() -> Iterable[None]:
 # TESTS
 
 
+def test_context_manager(mainfest_b: List[CommandManifest]) -> None:
+    with _get_control_interface(1235, 1234, mainfest_b):
+        pass
+
+
 def test_request_with_delayed_reply(
     control_interface_a: ControlInterface, control_interface_b: ControlInterface
 ) -> None:

@@ -103,6 +103,13 @@ class ControlInterface:
         )
         self._continue: bool = True
 
+    def __enter__(self) -> "ControlInterface":
+        self.start_background_sync()
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.stop_background_sync()
+
     def _sender_worker(self) -> None:
         self._sender_receiver_pair.sender_init()
 
