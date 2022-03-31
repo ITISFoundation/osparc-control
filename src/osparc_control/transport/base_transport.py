@@ -47,7 +47,7 @@ class BaseTransport(metaclass=BaseTransportMeta):
 
 
 class SenderReceiverPair:
-    """To be used by more custom protcols"""
+    """To be used by more custom protocols"""
 
     def __init__(self, sender: BaseTransport, receiver: BaseTransport) -> None:
         self._sender: BaseTransport = sender
