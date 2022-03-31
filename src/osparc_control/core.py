@@ -74,7 +74,7 @@ class ControlInterface:
         )
 
         def _update_remapped_params(manifest: CommandManifest) -> CommandManifest:
-            manifest._remapped_params = {x.name: x for x in manifest.params}
+            manifest._params_names_set = {x.name for x in manifest.params}
             return manifest
 
         # map action to the final version of the manifest
@@ -159,8 +159,7 @@ class ControlInterface:
 
         # check if provided parametes match manifest
         incoming_params_set = set(command_request.params.keys())
-        manifest_params_set = set(manifest._remapped_params.keys())
-        if incoming_params_set != manifest_params_set:
+        if incoming_params_set != manifest._params_names_set:
             error_message = (
                 f"Incoming request params {command_request.params} do not match "
                 f"manifest's params {manifest.params}"

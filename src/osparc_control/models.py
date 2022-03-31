@@ -3,6 +3,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Set
 
 import umsgpack  # type: ignore
 from pydantic import BaseModel
@@ -52,8 +53,8 @@ class CommandType(str, Enum):
 
 
 class CommandManifest(BaseModel):
-    # used internally
-    _remapped_params: Dict[str, CommandParameter] = PrivateAttr()
+    # used to speed up parameter matching
+    _params_names_set: Set[str] = PrivateAttr()
 
     action: str = Field(..., description="name of the action to be triggered on remote")
     description: str = Field(..., description="more details about the action")
