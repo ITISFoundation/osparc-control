@@ -18,7 +18,7 @@ from tenacity import Retrying
 from tenacity.stop import stop_after_delay
 from tenacity.wait import wait_fixed
 
-from .errors import CommnadNotAcceptedError
+from .errors import CommandNotAcceptedError
 from .errors import NoCommandReceivedArrivedError
 from .errors import NoReplyError
 from .models import CommandManifest
@@ -111,20 +111,17 @@ class ControlInterface:
         self.stop_background_sync()
 
     def _sender_worker(self) -> None:
-        self._sender_receiver_pair.sender_init()
+        with self._sender_receiver_pair:
+            while self._continue:
+                message: Optional[
+                    Union[CommandRequest, CommandReceived, CommandReply]
+                ] = self._out_queue.get()
+                if message is None:
+                    # exit worker
+                    break
 
-        while self._continue:
-            message: Optional[
-                Union[CommandRequest, CommandReceived, CommandReply]
-            ] = self._out_queue.get()
-            if message is None:
-                # exit worker
-                break
-
-            # send message
-            self._sender_receiver_pair.send_bytes(message.to_bytes())
-
-        self._sender_receiver_pair.sender_cleanup()
+                # send message
+                self._sender_receiver_pair.send_bytes(message.to_bytes())
 
     def _handle_command_request(self, response: bytes) -> None:
         command_request: Optional[CommandRequest] = CommandRequest.from_bytes(response)
@@ -267,7 +264,7 @@ class ControlInterface:
         assert command_received  # noqa: S101
 
         if not command_received.accepted:
-            raise CommnadNotAcceptedError(command_received.error_message)
+            raise CommandNotAcceptedError(command_received.error_message)
 
         return request
 
@@ -365,7 +362,7 @@ class ControlInterface:
 
     def get_incoming_requests(self) -> List[CommandRequest]:
         """
-        Non blocking, retruns all accumulated CommandRequests.
+        Non blocking, reruns all accumulated CommandRequests.
         It is meant to be used in an existing cycle
         """
         results: Deque[CommandRequest] = deque()

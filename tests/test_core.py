@@ -7,7 +7,7 @@ import pytest
 
 import osparc_control
 from osparc_control.core import ControlInterface
-from osparc_control.errors import CommnadNotAcceptedError
+from osparc_control.errors import CommandNotAcceptedError
 from osparc_control.errors import NoCommandReceivedArrivedError
 from osparc_control.models import CommandManifest
 from osparc_control.models import CommandParameter
@@ -195,21 +195,21 @@ def test_no_same_action_command_in_exposed_interface(command_type: CommandType) 
 def test_no_registered_command(
     control_interface_a: ControlInterface, control_interface_b: ControlInterface
 ) -> None:
-    with pytest.raises(CommnadNotAcceptedError):
+    with pytest.raises(CommandNotAcceptedError):
         control_interface_a.request_without_reply("command_not_defined")
 
 
 def test_wrong_command_type(
     control_interface_a: ControlInterface, control_interface_b: ControlInterface
 ) -> None:
-    with pytest.raises(CommnadNotAcceptedError):
+    with pytest.raises(CommandNotAcceptedError):
         control_interface_a.request_without_reply("add_numbers")
 
 
 def test_command_params_mismatch(
     control_interface_a: ControlInterface, control_interface_b: ControlInterface
 ) -> None:
-    with pytest.raises(CommnadNotAcceptedError):
+    with pytest.raises(CommandNotAcceptedError):
         control_interface_a.request_without_reply("add_numbers", {"nope": 123})
 
 

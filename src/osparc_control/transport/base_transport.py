@@ -1,5 +1,6 @@
 from abc import ABCMeta
 from abc import abstractmethod
+from typing import Any
 from typing import Optional
 
 
@@ -72,3 +73,10 @@ class SenderReceiverPair:
 
     def receiver_cleanup(self) -> None:
         self._receiver.receiver_cleanup()
+
+    def __enter__(self) -> "SenderReceiverPair":
+        self.sender_init()
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.sender_cleanup()
