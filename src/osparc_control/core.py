@@ -11,6 +11,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 from uuid import getnode
+from uuid import UUID
 from uuid import uuid4
 
 from pydantic import ValidationError
@@ -42,10 +43,12 @@ WAIT_FOR_RECEIVED: float = 1 * _MINUTE
 
 DEFAULT_LISTEN_PORT: int = 7426
 
+UNIQUE_HARDWARE_ID: int = getnode()
+SESSION_ID: UUID = uuid4()
+
 
 def _generate_request_id() -> str:
-    unique_hardware_id: int = getnode()
-    return f"{unique_hardware_id}_{uuid4()}"
+    return f"{UNIQUE_HARDWARE_ID}.{SESSION_ID}_{uuid4()}"
 
 
 def _get_sender_receiver_pair(
