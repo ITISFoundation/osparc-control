@@ -20,8 +20,8 @@ from tenacity import Retrying
 from tenacity.stop import stop_after_delay
 from tenacity.wait import wait_fixed
 
+from .errors import CommandConfirmationTimeoutError
 from .errors import CommandNotAcceptedError
-from .errors import NoCommandReceivedArrivedError
 from .errors import NoReplyError
 from .models import CommandManifest
 from .models import CommandReceived
@@ -39,7 +39,7 @@ WAIT_FOR_MESSAGES: float = 0.01
 WAIT_BETWEEN_CHECKS: float = 0.1
 # NOTE: this effectively limits the time between when
 # the two remote sides can start to communicate
-WAIT_FOR_RECEIVED: float = 1 * _MINUTE
+WAIT_FOR_RECEIVED_S: float = 1 * _MINUTE
 
 DEFAULT_LISTEN_PORT: int = 7426
 
@@ -254,18 +254,23 @@ class ControlInterface:
 
         self._out_queue.put(request)
 
-        # check command_received status
+        # wait for remote to reply with command_received
+        # if no reply is received in WAIT_FOR_RECEIVED_S
+        # an error will be raised
+        # an error will also be raised if the command was
+        # unexpected (did not validate agains a
+        # CommandManifest entry)
         command_received: Optional[CommandReceived] = None
         try:
             for attempt in Retrying(
-                stop=stop_after_delay(WAIT_FOR_RECEIVED),
+                stop=stop_after_delay(WAIT_FOR_RECEIVED_S),
                 wait=wait_fixed(WAIT_BETWEEN_CHECKS),
                 retry_error_cls=Empty,  # type: ignore
             ):
                 with attempt:
                     command_received = self._incoming_command_queue.get(block=False)
         except Empty:
-            raise NoCommandReceivedArrivedError() from None
+            raise CommandConfirmationTimeoutError() from None
 
         assert command_received  # noqa: S101
 

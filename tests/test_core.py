@@ -8,8 +8,8 @@ from pydantic import ValidationError
 
 import osparc_control
 from osparc_control.core import ControlInterface
+from osparc_control.errors import CommandConfirmationTimeoutError
 from osparc_control.errors import CommandNotAcceptedError
-from osparc_control.errors import NoCommandReceivedArrivedError
 from osparc_control.models import CommandManifest
 from osparc_control.models import CommandParameter
 from osparc_control.models import CommandType
@@ -88,10 +88,10 @@ def control_interface_b(
 
 @pytest.fixture
 def mock_wait_for_received() -> Iterable[None]:
-    previous = osparc_control.core.WAIT_FOR_RECEIVED
-    osparc_control.core.WAIT_FOR_RECEIVED = 0.01
+    previous = osparc_control.core.WAIT_FOR_RECEIVED_S
+    osparc_control.core.WAIT_FOR_RECEIVED_S = 0.01
     yield
-    osparc_control.core.WAIT_FOR_RECEIVED = previous
+    osparc_control.core.WAIT_FOR_RECEIVED_S = previous
 
 
 # TESTS
@@ -217,7 +217,7 @@ def test_command_params_mismatch(
 def test_side_b_does_not_reply_in_time(mock_wait_for_received: None) -> None:
     control_interface = _get_control_interface(8263, 8263, [])
     control_interface.start_background_sync()
-    with pytest.raises(NoCommandReceivedArrivedError):
+    with pytest.raises(CommandConfirmationTimeoutError):
         control_interface.request_without_reply(
             "no_remote_side_for_command", {"nope": 123}
         )
