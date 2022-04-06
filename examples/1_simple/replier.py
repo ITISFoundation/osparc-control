@@ -39,6 +39,6 @@ while wait_for_requests:
             wait_for_requests = False
 
 # allow for message to be delivered
-time.sleep(0.01)
+time.sleep(0.3)
 
 paired_transmitter.stop_background_sync()
