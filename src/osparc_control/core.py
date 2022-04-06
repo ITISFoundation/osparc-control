@@ -200,7 +200,8 @@ class ControlInterface:
         self._sender_receiver_pair.receiver_init()
 
         while self._continue:
-            # this is blocking should be under timeout block
+            sleep(WAIT_FOR_MESSAGES)
+
             response: Optional[bytes] = self._sender_receiver_pair.receive_bytes()
             if response is None:
                 # no messages available
@@ -208,26 +209,28 @@ class ControlInterface:
 
             # NOTE: pydantic does not support polymorphism
             # SEE https://github.com/samuelcolvin/pydantic/issues/503
+            # below try catch pattern is how to deal with it
 
             # case CommandReceived
             try:
                 self._handle_command_received(response)
+                continue
             except ValidationError:
                 pass
 
             # case CommandRequest
             try:
                 self._handle_command_request(response)
+                continue
             except ValidationError:
                 pass
 
             # case CommandReply
             try:
                 self._handle_command_reply(response)
+                continue
             except ValidationError:
                 pass
-
-            sleep(WAIT_FOR_MESSAGES)
 
         self._sender_receiver_pair.receiver_cleanup()
 
