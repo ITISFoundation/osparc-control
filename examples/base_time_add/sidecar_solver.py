@@ -3,7 +3,6 @@ from osparc_control import CommandParameter
 from osparc_control import CommandType
 from osparc_control import ControlInterface
 
-
 command_add = CommandManifest(
     action="add_internal_time",
     description="adds internal time to a provided paramter",

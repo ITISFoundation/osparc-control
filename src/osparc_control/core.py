@@ -14,6 +14,7 @@ from uuid import getnode
 from uuid import UUID
 from uuid import uuid4
 
+from pydantic import validate_arguments
 from pydantic import ValidationError
 from tenacity import Retrying
 from tenacity.stop import stop_after_delay
@@ -31,7 +32,6 @@ from .models import RequestsTracker
 from .models import TrackedRequest
 from .transport.base_transport import SenderReceiverPair
 from osparc_control.transport.zeromq import ZeroMQTransport
-
 
 _MINUTE: float = 60.0
 
@@ -64,6 +64,7 @@ def _get_sender_receiver_pair(
 
 
 class ControlInterface:
+    @validate_arguments
     def __init__(
         self,
         remote_host: str,

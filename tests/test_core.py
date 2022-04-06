@@ -4,6 +4,7 @@ from typing import Iterable
 from typing import List
 
 import pytest
+from pydantic import ValidationError
 
 import osparc_control
 from osparc_control.core import ControlInterface
@@ -219,4 +220,14 @@ def test_side_b_does_not_reply_in_time(mock_wait_for_received: None) -> None:
     with pytest.raises(NoCommandReceivedArrivedError):
         control_interface.request_without_reply(
             "no_remote_side_for_command", {"nope": 123}
+        )
+
+
+def test_control_interface_validation() -> None:
+    with pytest.raises(ValidationError):
+        ControlInterface(
+            remote_host="localhost",
+            exposed_interface=[1],
+            remote_port=1,
+            listen_port=2,
         )

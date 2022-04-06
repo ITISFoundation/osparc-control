@@ -1,6 +1,5 @@
 from osparc_control import ControlInterface
 
-
 control_interface = ControlInterface(
     remote_host="localhost", exposed_interface=[], remote_port=1234, listen_port=1235
 )
