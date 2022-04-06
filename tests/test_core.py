@@ -26,11 +26,11 @@ ALL_COMMAND_TYPES: List[CommandType] = [
 
 
 def _get_paired_transmitter(
-    local_port: int, remote_port: int, exposed_interface: List[CommandManifest]
+    local_port: int, remote_port: int, exposed_commands: List[CommandManifest]
 ) -> PairedTransmitter:
     return PairedTransmitter(
         remote_host="localhost",
-        exposed_interface=exposed_interface,
+        exposed_commands=exposed_commands,
         remote_port=remote_port,
         listen_port=local_port,
     )
@@ -184,7 +184,7 @@ def test_request_without_reply(
 
 
 @pytest.mark.parametrize("command_type", ALL_COMMAND_TYPES)
-def test_no_same_action_command_in_exposed_interface(command_type: CommandType) -> None:
+def test_no_same_action_command_in_exposed_commands(command_type: CommandType) -> None:
     test_command_manifest = CommandManifest(
         action="test", description="test", params=[], command_type=command_type
     )
@@ -229,7 +229,7 @@ def test_paired_transmitter_validation() -> None:
     with pytest.raises(ValidationError):
         PairedTransmitter(
             remote_host="localhost",
-            exposed_interface=[1],
+            exposed_commands=[1],  # type: ignore
             remote_port=1,
             listen_port=2,
         )

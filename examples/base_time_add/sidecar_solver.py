@@ -29,7 +29,7 @@ command_print_solver_status = CommandManifest(
 
 paired_transmitter = PairedTransmitter(
     remote_host="localhost",
-    exposed_interface=[command_add, command_get_time, command_print_solver_status],
+    exposed_commands=[command_add, command_get_time, command_print_solver_status],
     remote_port=1235,
     listen_port=1234,
 )

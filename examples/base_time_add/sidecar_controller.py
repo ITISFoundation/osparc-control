@@ -1,7 +1,7 @@
 from osparc_control import PairedTransmitter
 
 paired_transmitter = PairedTransmitter(
-    remote_host="localhost", exposed_interface=[], remote_port=1234, listen_port=1235
+    remote_host="localhost", exposed_commands=[], remote_port=1234, listen_port=1235
 )
 paired_transmitter.start_background_sync()
 

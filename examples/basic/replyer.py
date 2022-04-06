@@ -18,7 +18,7 @@ random_in_range_manifest = CommandManifest(
 
 paired_transmitter = PairedTransmitter(
     remote_host="localhost",
-    exposed_interface=[random_in_range_manifest],
+    exposed_commands=[random_in_range_manifest],
     remote_port=2346,
     listen_port=2345,
 )

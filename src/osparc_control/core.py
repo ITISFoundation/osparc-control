@@ -68,7 +68,8 @@ class PairedTransmitter:
     def __init__(
         self,
         remote_host: str,
-        exposed_interface: List[CommandManifest],
+        *,
+        exposed_commands: List[CommandManifest],
         remote_port: int = DEFAULT_LISTEN_PORT,
         listen_port: int = DEFAULT_LISTEN_PORT,
     ) -> None:
@@ -82,12 +83,12 @@ class PairedTransmitter:
             return manifest
 
         # map action to the final version of the manifest
-        self._exposed_interface: Dict[str, CommandManifest] = {
-            x.action: _update_remapped_params(x) for x in exposed_interface
+        self._exposed_commands: Dict[str, CommandManifest] = {
+            x.action: _update_remapped_params(x) for x in exposed_commands
         }
-        if len(self._exposed_interface) != len(exposed_interface):
+        if len(self._exposed_commands) != len(exposed_commands):
             raise ValueError(
-                f"Provided exposed_interface={exposed_interface} "
+                f"Provided exposed_commands={exposed_commands} "
                 "contains CommandManifest with same action name."
             )
 
@@ -143,14 +144,14 @@ class PairedTransmitter:
             return
 
         # check if command exists
-        if command_request.action not in self._exposed_interface:
+        if command_request.action not in self._exposed_commands:
             error_message = (
                 f"No registered command found for action={command_request.action}. "
-                f"Supported actions {list(self._exposed_interface.keys())}"
+                f"Supported actions {list(self._exposed_commands.keys())}"
             )
             _refuse_and_return(error_message)
 
-        manifest = self._exposed_interface[command_request.action]
+        manifest = self._exposed_commands[command_request.action]
 
         # check command_type matches the one declared in the manifest
         if command_request.command_type != manifest.command_type:
