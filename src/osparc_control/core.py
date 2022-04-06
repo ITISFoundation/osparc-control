@@ -345,8 +345,9 @@ class PairedTransmitter:
     def request_with_immediate_reply(
         self,
         action: str,
-        timeout: float,
         params: Optional[Dict[str, Any]] = None,
+        *,
+        timeout: float,
     ) -> Optional[Any]:
         """
         Requests and awaits for the response from remote.
