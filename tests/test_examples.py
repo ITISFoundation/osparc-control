@@ -39,6 +39,7 @@ def assert_run_in_parallel(scrips_to_run: List[Path]) -> None:
 
     for permutation in itertools.permutations(scrips_to_run):
         # run provided scripts
+        print(f"Running permutation {permutation}")
         processes = [
             Popen(  # noqa: S607
                 ["python", f"{x}"], shell=True, stdout=PIPE, stderr=STDOUT  # noqa: S602
