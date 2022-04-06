@@ -26,7 +26,7 @@ ALL_COMMAND_TYPES: List[CommandType] = [
 
 
 def _get_paired_transmitter(
-    local_port: int, remote_port: int, exposed_commands: List[CommandManifest]
+    *, local_port: int, remote_port: int, exposed_commands: List[CommandManifest]
 ) -> PairedTransmitter:
     return PairedTransmitter(
         remote_host="localhost",
@@ -41,7 +41,9 @@ def _get_paired_transmitter(
 
 @pytest.fixture
 def paired_transmitter_a() -> Iterable[PairedTransmitter]:
-    paired_transmitter = _get_paired_transmitter(1234, 1235, [])
+    paired_transmitter = _get_paired_transmitter(
+        local_port=1234, remote_port=1235, exposed_commands=[]
+    )
     paired_transmitter.start_background_sync()
     yield paired_transmitter
     paired_transmitter.stop_background_sync()
@@ -80,7 +82,9 @@ def mainfest_b() -> List[CommandManifest]:
 def paired_transmitter_b(
     mainfest_b: List[CommandManifest],
 ) -> Iterable[PairedTransmitter]:
-    paired_transmitter = _get_paired_transmitter(1235, 1234, mainfest_b)
+    paired_transmitter = _get_paired_transmitter(
+        local_port=1235, remote_port=1234, exposed_commands=mainfest_b
+    )
     paired_transmitter.start_background_sync()
     yield paired_transmitter
     paired_transmitter.stop_background_sync()
@@ -98,7 +102,9 @@ def mock_wait_for_received() -> Iterable[None]:
 
 
 def test_context_manager(mainfest_b: List[CommandManifest]) -> None:
-    with _get_paired_transmitter(1235, 1234, mainfest_b):
+    with _get_paired_transmitter(
+        local_port=1235, remote_port=1234, exposed_commands=mainfest_b
+    ):
         pass
 
 
@@ -191,7 +197,9 @@ def test_no_same_action_command_in_exposed_commands(command_type: CommandType) -
 
     with pytest.raises(ValueError):
         _get_paired_transmitter(
-            100, 100, [test_command_manifest, test_command_manifest]
+            local_port=100,
+            remote_port=100,
+            exposed_commands=[test_command_manifest, test_command_manifest],
         )
 
 
@@ -217,7 +225,9 @@ def test_command_params_mismatch(
 
 
 def test_side_b_does_not_reply_in_time(mock_wait_for_received: None) -> None:
-    paired_transmitter = _get_paired_transmitter(8263, 8263, [])
+    paired_transmitter = _get_paired_transmitter(
+        local_port=8263, remote_port=8263, exposed_commands=[]
+    )
     paired_transmitter.start_background_sync()
     with pytest.raises(CommandConfirmationTimeoutError):
         paired_transmitter.request_without_reply(
