@@ -5,7 +5,7 @@ Reference
 osparc_control
 --------------
 
-.. autoclass:: osparc_control.ControlInterface
+.. autoclass:: osparc_control.PairedTransmitter
    :members:
    :undoc-members:
 

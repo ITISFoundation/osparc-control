@@ -1,7 +1,7 @@
 from osparc_control import CommandManifest
 from osparc_control import CommandParameter
 from osparc_control import CommandType
-from osparc_control import ControlInterface
+from osparc_control import PairedTransmitter
 
 command_add = CommandManifest(
     action="add_internal_time",
@@ -27,7 +27,7 @@ command_print_solver_status = CommandManifest(
 )
 
 
-control_interface = ControlInterface(
+paired_transmitter = PairedTransmitter(
     remote_host="localhost",
     exposed_interface=[command_add, command_get_time, command_print_solver_status],
     remote_port=1235,

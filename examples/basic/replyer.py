@@ -4,7 +4,7 @@ import time
 from osparc_control import CommandManifest
 from osparc_control import CommandParameter
 from osparc_control import CommandType
-from osparc_control import ControlInterface
+from osparc_control import PairedTransmitter
 
 random_in_range_manifest = CommandManifest(
     action="random_in_range",
@@ -16,22 +16,22 @@ random_in_range_manifest = CommandManifest(
     command_type=CommandType.WITH_IMMEDIATE_REPLY,
 )
 
-control_interface = ControlInterface(
+paired_transmitter = PairedTransmitter(
     remote_host="localhost",
     exposed_interface=[random_in_range_manifest],
     remote_port=2346,
     listen_port=2345,
 )
-control_interface.start_background_sync()
+paired_transmitter.start_background_sync()
 
 wait_for_requests = True
 while wait_for_requests:
-    for command in control_interface.get_incoming_requests():
+    for command in paired_transmitter.get_incoming_requests():
         if command.action == random_in_range_manifest.action:
             random_int = random.randint(  # noqa: S311
                 command.params["a"], command.params["b"]
             )
-            control_interface.reply_to_command(
+            paired_transmitter.reply_to_command(
                 request_id=command.request_id, payload=random_int
             )
             wait_for_requests = False
@@ -39,4 +39,4 @@ while wait_for_requests:
 # allow for message to be delivered
 time.sleep(0.01)
 
-control_interface.stop_background_sync()
+paired_transmitter.stop_background_sync()

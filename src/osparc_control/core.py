@@ -63,7 +63,7 @@ def _get_sender_receiver_pair(
     return SenderReceiverPair(sender=sender, receiver=receiver)
 
 
-class ControlInterface:
+class PairedTransmitter:
     @validate_arguments
     def __init__(
         self,
@@ -107,7 +107,7 @@ class ControlInterface:
         )
         self._continue: bool = True
 
-    def __enter__(self) -> "ControlInterface":
+    def __enter__(self) -> "PairedTransmitter":
         self.start_background_sync()
         return self
 
