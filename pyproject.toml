@@ -46,8 +46,6 @@ pyupgrade = "^2.29.1"
 furo = ">=2021.11.12"
 rope = "^0.23.0"
 
-[tool.poetry.scripts]
-osparc-control = "osparc_control.__main__:main"
 
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]
