@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/ITISFoundation/osparc-control"
 repository = "https://github.com/ITISFoundation/osparc-control"
-documentation = "https://osparc-control.readthedocs.io"
+documentation = "https://itisfoundation.github.io/osparc-control/"
 classifiers = [
     "Development Status :: 3 - Alpha",
 ]
