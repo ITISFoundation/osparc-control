@@ -2,9 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/osparc-control.svg)](https://pypi.org/project/osparc-control/) [![Status](https://img.shields.io/pypi/status/osparc-control.svg)](https://pypi.org/project/osparc-control/) [![Python Version](https://img.shields.io/pypi/pyversions/osparc-control)](https://pypi.org/project/osparc-control) [![License](https://img.shields.io/pypi/l/osparc-control)](https://opensource.org/licenses/MIT)
 
-[![Read the documentation at https://osparc-control.readthedocs.io/](https://img.shields.io/readthedocs/osparc-control/latest.svg?label=Read%20the%20Docs)](https://osparc-control.readthedocs.io/) [![Tests](https://github.com/ITISFoundation/osparc-control/workflows/Tests/badge.svg)](https://github.com/ITISFoundation/osparc-control/actions?workflow=Tests)
-
-[![Codecov](https://codecov.io/gh/ITISFoundation/osparc-control/branch/main/graph/badge.svg)](https://codecov.io/gh/ITISFoundation/osparc-control) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit) [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Tests](https://github.com/ITISFoundation/osparc-control/workflows/Tests/badge.svg)](https://github.com/ITISFoundation/osparc-control/actions?workflow=Tests) [![Codecov](https://codecov.io/gh/ITISFoundation/osparc-control/branch/main/graph/badge.svg)](https://codecov.io/gh/ITISFoundation/osparc-control) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit) [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ---
 
@@ -99,4 +97,3 @@ This project was generated from [@cjolowicz]'s [Hypermodern Python Cookiecutter]
 [pip]: https://pip.pypa.io/
 [contributor guide]: CONTRIBUTING.md
 [code of conduct]: CODE_OF_CONDUCT.md
-[usage]: https://osparc-control.readthedocs.io/en/latest/usage.html

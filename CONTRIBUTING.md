@@ -99,7 +99,7 @@ This will allow a chance to talk it over with the owners and validate your appro
 
 [mit license]: https://opensource.org/licenses/MIT
 [source code]: https://github.com/ITISFoundation/osparc-control
-[documentation]: https://osparc-control.readthedocs.io/
+[documentation]: https://itisfoundation.github.io/osparc-control/
 [issue tracker]: https://github.com/ITISFoundation/osparc-control/issues
 [code of conduct]: CODE_OF_CONDUCT.rst
 [pull request]: https://github.com/ITISFoundation/osparc-control/pulls
