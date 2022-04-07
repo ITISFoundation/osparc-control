@@ -1,4 +1,4 @@
-# Heps setup basic env development
+# Helps setup basic env development
 
 # poetry is required on your system
 # suggested installation method
@@ -8,7 +8,7 @@
 install-poetry:
 	curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
 
-# install deve dependecis as sugested by coockicutter
+# install development dependencies as suggested by cookiecutter
 # https://cookiecutter-hypermodern-python.readthedocs.io/en/2021.11.26/quickstart.html
 .PHONY: install-dev
 install-dev:

@@ -10,6 +10,9 @@ from zmq import Socket
 
 from .base_transport import BaseTransport
 
+RETRY_COUNT: int = 3
+WAIT_BETWEEN: float = 0.01
+
 
 class ZeroMQTransport(BaseTransport):
     def __init__(self, listen_port: int, remote_host: str, remote_port: int):
@@ -27,18 +30,16 @@ class ZeroMQTransport(BaseTransport):
 
         self._send_socket.send(payload)  # type: ignore
 
-    def receive_bytes(
-        self, retry_count: int = 3, wait_between: float = 0.01
-    ) -> Optional[bytes]:
+    def receive_bytes(self) -> Optional[bytes]:
         assert self._recv_socket  # noqa: S101
 
-        # try to fetch a message, usning unlocking sockets does not guarantee
+        # try to fetch a message, using blocking sockets does not guarantee
         # that data is always present, retry 3 times in a short amount of time
         # this will guarantee the message arrives
         message: Optional[bytes] = None
         try:
             for attempt in Retrying(
-                stop=stop_after_attempt(retry_count), wait=wait_fixed(wait_between)
+                stop=stop_after_attempt(RETRY_COUNT), wait=wait_fixed(WAIT_BETWEEN)
             ):
                 with attempt:
                     message = self._recv_socket.recv(zmq.NOBLOCK)  # type: ignore

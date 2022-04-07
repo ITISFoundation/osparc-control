@@ -13,7 +13,7 @@ from osparc_control.models import CommandParameter
 from osparc_control.models import CommandReceived
 from osparc_control.models import CommandReply
 from osparc_control.models import CommandRequest
-from osparc_control.models import CommnadType
+from osparc_control.models import CommandType
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ PARAMS: List[Optional[List[CommandParameter]]] = [
 
 @pytest.mark.parametrize("params", PARAMS)
 def test_command_manifest(params: Optional[List[CommandParameter]]) -> None:
-    for command_type in CommnadType:
+    for command_type in CommandType:
         assert CommandManifest(
             action="test",
             description="some test action",
@@ -47,7 +47,7 @@ def test_command(request_id: str, params: Optional[List[CommandParameter]]) -> N
     manifest = CommandManifest(
         action="test",
         description="some test action",
-        command_type=CommnadType.WITHOUT_REPLY,
+        command_type=CommandType.WITHOUT_REPLY,
         params=[] if params is None else params,
     )
 
@@ -70,7 +70,7 @@ def test_msgpack_serialization_deserialization(
     manifest = CommandManifest(
         action="test",
         description="some test action",
-        command_type=CommnadType.WITH_IMMEDIATE_REPLY,
+        command_type=CommandType.WITH_IMMEDIATE_REPLY,
         params=[] if params is None else params,
     )
 
@@ -124,5 +124,5 @@ def test_duplicate_command_parameter_name_in_manifest() -> None:
                 CommandParameter(name="a", description="ok"),
                 CommandParameter(name="a", description="not allowed same name"),
             ],
-            command_type=CommnadType.WITH_DELAYED_REPLY,
+            command_type=CommandType.WITH_DELAYED_REPLY,
         )

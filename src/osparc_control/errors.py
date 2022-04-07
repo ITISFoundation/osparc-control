@@ -6,9 +6,9 @@ class NoReplyError(BaseControlError):
     """Used when retrying for a result"""
 
 
-class CommnadNotAcceptedError(BaseControlError):
+class CommandNotAcceptedError(BaseControlError):
     """Command was not accepted by remote"""
 
 
-class NoCommandReceivedArrivedError(BaseControlError):
+class CommandConfirmationTimeoutError(BaseControlError):
     """Reply from remote host did not arrive in time"""

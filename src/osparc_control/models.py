@@ -3,6 +3,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Set
 
 import umsgpack  # type: ignore
 from pydantic import BaseModel
@@ -36,7 +37,7 @@ class CommandParameter(BaseModel):
     )
 
 
-class CommnadType(str, Enum):
+class CommandType(str, Enum):
     # the command expects no reply
     WITHOUT_REPLY = "WITHOUT_REPLY"
 
@@ -52,15 +53,15 @@ class CommnadType(str, Enum):
 
 
 class CommandManifest(BaseModel):
-    # used internally
-    _remapped_params: Dict[str, CommandParameter] = PrivateAttr()
+    # used to speed up parameter matching
+    _params_names_set: Set[str] = PrivateAttr()
 
     action: str = Field(..., description="name of the action to be triggered on remote")
     description: str = Field(..., description="more details about the action")
     params: List[CommandParameter] = Field(
         None, description="requested parameters by the user"
     )
-    command_type: CommnadType = Field(
+    command_type: CommandType = Field(
         ..., description="describes the command type, behaviour and usage"
     )
 
@@ -78,7 +79,7 @@ class CommandRequest(CommandBase):
     request_id: str = Field(..., description="unique identifier")
     action: str = Field(..., description="name of the action to be triggered on remote")
     params: Dict[str, Any] = Field({}, description="requested parameters by the user")
-    command_type: CommnadType = Field(
+    command_type: CommandType = Field(
         ..., description="describes the command type, behaviour and usage"
     )
 

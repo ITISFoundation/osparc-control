@@ -1,7 +1,14 @@
 """Osparc Control."""
-from .core import ControlInterface
+from .core import PairedTransmitter
 from .models import CommandManifest
 from .models import CommandParameter
-from .models import CommnadType
+from .models import CommandRequest
+from .models import CommandType
 
-__all__ = ["ControlInterface", "CommandManifest", "CommandParameter", "CommnadType"]
+__all__ = [
+    "PairedTransmitter",
+    "CommandManifest",
+    "CommandParameter",
+    "CommandRequest",
+    "CommandType",
+]
