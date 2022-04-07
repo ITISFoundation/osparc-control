@@ -1,5 +1,4 @@
 import itertools
-import sys
 from pathlib import Path
 from subprocess import PIPE  # noqa: S404
 from subprocess import Popen  # noqa: S404
@@ -9,22 +8,20 @@ from typing import List
 
 import pytest
 
-HERE = Path(sys.argv[0] if __name__ == "__main__" else __file__).resolve().parent
-
 
 # FIXTURES
 
 
 @pytest.fixture
-def path_1_simple() -> Path:
-    path = (HERE / ".." / "examples" / "1_simple").resolve()
+def example_1_simple_path(examples_path: Path) -> Path:
+    path = (examples_path / "1_simple").resolve()
     assert path.exists()
     return path
 
 
 @pytest.fixture
-def path_2_base_time_add() -> Path:
-    path = (HERE / ".." / "examples" / "2_base_time_add").resolve()
+def example_2_base_time_add_path(examples_path: Path) -> Path:
+    path = (examples_path / "2_base_time_add").resolve()
     assert path.exists()
     return path
 
@@ -64,15 +61,15 @@ def assert_run_in_parallel(scrips_to_run: List[Path]) -> None:
 # TESTS
 
 
-def test_example_1_simple_runs(path_1_simple: Path) -> None:
-    replier_path = path_1_simple / "replier.py"
-    requester_path = path_1_simple / "requester.py"
+def test_example_1_simple_runs(example_1_simple_path: Path) -> None:
+    replier_path = example_1_simple_path / "replier.py"
+    requester_path = example_1_simple_path / "requester.py"
 
     assert_run_in_parallel([replier_path, requester_path])
 
 
-def test_example_2_base_time_add_runs(path_2_base_time_add: Path) -> None:
-    controller_path = path_2_base_time_add / "controller.py"
-    solver_path = path_2_base_time_add / "solver.py"
+def test_example_2_base_time_add_runs(example_2_base_time_add_path: Path) -> None:
+    controller_path = example_2_base_time_add_path / "controller.py"
+    solver_path = example_2_base_time_add_path / "solver.py"
 
     assert_run_in_parallel([controller_path, solver_path])
