@@ -14,6 +14,10 @@ You can install _Osparc Control_ via [pip] from [PyPI]:
 pip install osparc-control
 ```
 
+## Documentation
+
+Read docs at https://itisfoundation.github.io/osparc-control
+
 ## Examples
 
 To run below examples either clone the repo or copy code from the snippets
