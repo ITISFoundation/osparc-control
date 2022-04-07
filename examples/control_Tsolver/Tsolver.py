@@ -43,6 +43,7 @@ class TSolver:
         
     def wait_if_necessary(self,t): #move what is possible into the sidecar
         while self.sidecar.get_wait_status(t):
+            print(f"Solver: during wait_if_necessary, records are {self.sidecar.records}")
             print("triggered wait_if_necessary")
             self.wait_a_bit()
 
@@ -67,6 +68,7 @@ class TSolver:
             rec1=pop1[2]
             if rec1[0]=='Tpoint':
                 self.sidecar.records[recindex].append((t,self.T[rec1[1][0],rec1[1][1]]))
+                #print(f"Solver: after recording, records are {self.sidecar.records}")
             elif rec1[0]=='Tvol':
                 self.sidecar.records[recindex].append((t,self.T[rec1[1][0]:rec1[1][2],rec1[1][1]:rec1[1][3]]))
         self.sidecar.t=t

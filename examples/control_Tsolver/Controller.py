@@ -41,10 +41,15 @@ class Controller:
         self.sets=[]
         self.controlledvals=[]
         lasttime=0
-
+        
         while not self.controlled.endsignal:
-            self.controlled.wait_for_time(waittime,1000)
+            #self.controlled.wait_for_time(waittime,1000)
+            self.controlled.sync() # Maybe we can get rid of wait_for_time
             get1=self.controlled.get(recindex)
+            print(f"Controller: time is {waittime}")
+            print(recindex)
+            print(self.controlled.records)
+            print(get1)
             if not get1:
                 error1 = error_prior
                 timestep=self.t-lasttime
@@ -60,6 +65,7 @@ class Controller:
             derivative = (error1 - error_prior) / timestep
             output=self.KP*error1 + self.KI*integral + self.KD*derivative + bias
             newset=newset+output 
+            
             self.controlled.setnow(self.tweakparam_key, newset)
             self.sets.append(newset)
             error_prior = error1
