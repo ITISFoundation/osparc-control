@@ -9,6 +9,9 @@ from typing import List
 import pytest
 
 
+DELAY_PRCESS_START_S: float = 1.0
+WAIT_BETWEEN_CHECKS_S: float = 0.3
+
 # FIXTURES
 
 
@@ -37,20 +40,21 @@ def assert_run_in_parallel(scrips_to_run: List[Path]) -> None:
     for permutation in itertools.permutations(scrips_to_run):
         # run provided scripts
         print(f"Running permutation {permutation}")
-        processes = [
-            Popen(  # noqa: S607
+        processes = []
+        for x in permutation:
+            process = Popen(  # noqa: S607
                 ["python", f"{x}"], shell=True, stdout=PIPE, stderr=STDOUT  # noqa: S602
             )
-            for x in permutation
-        ]
+            sleep(DELAY_PRCESS_START_S)
+            processes.append(process)
 
         # wait for processes to finish
         continue_running = True
         while continue_running:
             continue_running = all(
-                [process.returncode is not None for process in processes]
+                process.returncode is not None for process in processes
             )
-            sleep(0.3)
+            sleep(WAIT_BETWEEN_CHECKS_S)
 
         # ensure all processes finished successfully
         for process in processes:
