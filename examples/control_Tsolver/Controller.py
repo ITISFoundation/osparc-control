@@ -1,6 +1,5 @@
 
-from osparc_control import CommandManifest, CommandParameter, CommnadType, ControlInterface
-from osparc_control.models import CommandRequest
+from osparc_control import CommandManifest, CommandParameter, CommandType, PairedTransmitter
 
 import time
 import numpy as np 
@@ -65,7 +64,7 @@ class Controller:
             derivative = (error1 - error_prior) / timestep
             output=self.KP*error1 + self.KI*integral + self.KD*derivative + bias
             newset=newset+output 
-            
+
             self.controlled.setnow(self.tweakparam_key, newset)
             self.sets.append(newset)
             error_prior = error1
@@ -93,12 +92,12 @@ if __name__ == "__main__":
         CommandParameter(name='paused', description="is paused"), 
         CommandParameter(name='records', description="some records")
     ],
-    command_type=CommnadType.WITHOUT_REPLY,
+    command_type=CommandType.WITHOUT_REPLY,
    )
 
-    control_interface = ControlInterface(
+    control_interface = PairedTransmitter(
     remote_host="localhost",
-    exposed_interface=[command_data],
+    exposed_commands=[command_data],
     remote_port=1235,
     listen_port=1234,
    )

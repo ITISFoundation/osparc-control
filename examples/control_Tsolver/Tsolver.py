@@ -1,5 +1,5 @@
 import time
-from osparc_control import CommandManifest, CommandParameter, CommnadType, ControlInterface
+from osparc_control import CommandManifest, CommandParameter, CommandType, PairedTransmitter
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -104,17 +104,17 @@ if __name__ == "__main__":
     params=[
         CommandParameter(name="instructions", description="Instructions for execution.")
     ],
-    command_type=CommnadType.WITHOUT_REPLY)
+    command_type=CommandType.WITHOUT_REPLY)
 
     command_retrieve = CommandManifest(
     action="command_retrieve",
     description="gets state",
     params=[],
-    command_type=CommnadType.WITHOUT_REPLY)   
+    command_type=CommandType.WITHOUT_REPLY)   
 
-    control_interface = ControlInterface(
+    control_interface = PairedTransmitter(
     remote_host="localhost",
-    exposed_interface=[command_instruct, command_retrieve],
+    exposed_commands=[command_instruct, command_retrieve],
     remote_port=1234,
     listen_port=1235)
 
