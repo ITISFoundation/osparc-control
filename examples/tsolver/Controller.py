@@ -5,7 +5,7 @@ import time
 import numpy as np 
 import matplotlib.pyplot as plt
 
-from Tsolver_sidecar import SideCar
+from communication import SideCar
 
 class Controller:
     def __init__(self,tweakparam_key, initval, regulationparam_key, regulationparam_otherparams, setpoint, iteration_time, KP, KI, KD, controlled):

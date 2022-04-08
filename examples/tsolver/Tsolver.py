@@ -4,7 +4,7 @@ from osparc_control import CommandManifest, CommandParameter, CommandType, Paire
 import numpy as np
 import matplotlib.pyplot as plt
 
-from Tsolver_sidecar import SideCar
+from communication import SideCar
 
 class TSolver:
     def __init__(self, dx, n, Tinit, dt, Tsource, k, sourcescale, tend, sidecar):
