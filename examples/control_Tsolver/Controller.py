@@ -42,13 +42,8 @@ class Controller:
         lasttime=0
         
         while not self.controlled.endsignal:
-            #self.controlled.wait_for_time(waittime,1000)
-            self.controlled.sync() # Maybe we can get rid of wait_for_time
+            self.controlled.wait_for_time(waittime,1000)
             get1=self.controlled.get(recindex)
-            print(f"Controller: time is {waittime}")
-            print(recindex)
-            print(self.controlled.records)
-            print(get1)
             if not get1:
                 error1 = error_prior
                 timestep=self.t-lasttime

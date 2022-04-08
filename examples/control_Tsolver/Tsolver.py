@@ -26,7 +26,7 @@ class TSolver:
         self.apply_set(self.t)
  
         while self.t<self.tend:
-            print(self.t)
+            print(f"Simulation time is {self.t}")
             self.record(self.t)
             self.wait_if_necessary(self.t)
             self.apply_set(self.t)  
@@ -43,7 +43,6 @@ class TSolver:
         
     def wait_if_necessary(self,t): #move what is possible into the sidecar
         while self.sidecar.get_wait_status(t):
-            print(f"Solver: during wait_if_necessary, records are {self.sidecar.records}")
             print("triggered wait_if_necessary")
             self.wait_a_bit()
 
@@ -62,20 +61,19 @@ class TSolver:
         #self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
 
     def record(self,t):
-        while (not self.sidecar.recordqueue.empty()) and self.sidecar.recordqueue.first()[0] <= t:
-            pop1=self.sidecar.recordqueue.pop()
+        while (not self.sidecar.recordqueue.empty()) and self.sidecar.recordqueue.queue[0][0] <= t:
+            pop1=self.sidecar.recordqueue.get()
             recindex=pop1[1]
             rec1=pop1[2]
             if rec1[0]=='Tpoint':
                 self.sidecar.records[recindex].append((t,self.T[rec1[1][0],rec1[1][1]]))
-                #print(f"Solver: after recording, records are {self.sidecar.records}")
             elif rec1[0]=='Tvol':
                 self.sidecar.records[recindex].append((t,self.T[rec1[1][0]:rec1[1][2],rec1[1][1]:rec1[1][3]]))
         self.sidecar.t=t
 
     def apply_set(self,t):
-        while (not self.sidecar.setqueue.empty()) and self.sidecar.setqueue.first()[0] <= t:
-            set1=self.sidecar.setqueue.pop()[2]
+        while (not self.sidecar.setqueue.empty()) and self.sidecar.setqueue.queue[0][0] <= t:
+            set1=self.sidecar.setqueue.get()[2]
             if set1[0]=='Tsource':
                 if set1[1].shape==Tsource.shape:
                     self.Tsource=set1[1]
@@ -123,7 +121,7 @@ if __name__ == "__main__":
     sidecar.canbegotten = ['Tpoint', 'Tvol']
     sidecar.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
 
-    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=50
+    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=500
     solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, tend, sidecar)
 
     out = solver.run()
