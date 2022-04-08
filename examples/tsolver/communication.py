@@ -24,7 +24,6 @@ class SideCar:
         self.setqueue=PriorityQueue()
         self.records={}
         self.instructions= [] #{}
-        self.instructioncounter=0
         self.canbeset=[]
         self.canbegotten=[]
         self.interface=interface
@@ -188,7 +187,7 @@ class SideCar:
                     print("got retrieve")
                 if inputdata != None:
                     self.instructions=inputdata['instructions']
-                    if len(self.instructions) > self.instructioncounter:
+                    if len(self.instructions) > 0:
                         self.executeInstructions()
                         print("Successfully executed " + str(inputdata))
 
@@ -199,6 +198,7 @@ class SideCar:
                     "command_instruct", params=outputdata
                 )
             self.interface.request_without_reply("command_retrieve")
+            self.instructions=[]
             print("asked to get state...")
 
             inputdata = None        
@@ -229,21 +229,18 @@ class SideCar:
 
     def executeInstructions(self):
         l=len(self.instructions)
-        while self.instructioncounter<l:
-            i=self.instructioncounter
-            inst=self.instructions[i]['inst']
-            self.instructioncounter=i+1
+        for _ in range(l):
+            entry = self.instructions.pop(0)
+            inst = entry['inst']
             if inst=='setnow':
-                self.setnow(self.instructions[i]['key'],self.instructions[i]['val'])
-            elif inst=='set':
-                self.set1(self.instructions[i]['key'],self.instructions[i]['val'],self.instructions[i]['t'])
+                self.setnow(entry['key'],entry['val'])
             elif inst=='record':
-                self.record(self.instructions[i]['key'],self.instructions[i]['timepoints'],self.instructions[i]['otherparams'],self.instructions[i]['index'])
+                self.record(entry['key'],entry['timepoints'],entry['otherparams'],entry['index'])
             elif inst=='waitformeat':
-                self.wait_for_me_at(self.instructions[i]['t'],self.instructions[i]['index'])
+                self.wait_for_me_at(entry['t'],entry['index'])
             elif inst=='continueplease':
-                self.continue_please(self.instructions[i]['index'])
+                self.continue_please(entry['index'])
             elif inst=='continueuntil':
-                self.continue_until(self.instructions[i]['t'],self.instructions[i]['index1'],self.instructions[i]['index2'])
+                self.continue_until(entry['t'],entry['index1'],entry['index2'])
             elif inst=='start':
                 self.start()
