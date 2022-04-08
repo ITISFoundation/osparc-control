@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "osparc-control"
-version = "0.0.1"
+version = "0.0.2"
 description = "Osparc Control"
 authors = ["Andrei Neagu <neagu@itis.swiss>"]
 license = "MIT"
