@@ -9,7 +9,7 @@ homepage = "https://github.com/ITISFoundation/osparc-control"
 repository = "https://github.com/ITISFoundation/osparc-control"
 documentation = "https://itisfoundation.github.io/osparc-control/"
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
 ]
 
 [tool.poetry.urls]
