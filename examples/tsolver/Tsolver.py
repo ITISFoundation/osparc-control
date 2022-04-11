@@ -26,7 +26,7 @@ class TSolver:
         self.apply_set(self.t)
  
         while self.t<self.tend:
-            print(f"Simulation time is {self.t}")
+            print(f"Simulation time is {round(self.t,2)}")
             self.record(self.t)
             self.wait_if_necessary(self.t)
             self.apply_set(self.t)  
@@ -61,32 +61,30 @@ class TSolver:
         #self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
 
     def record(self,t):
-        while (not self.sidecar.recordqueue.empty()) and self.sidecar.recordqueue.queue[0][0] <= t:
-            pop1=self.sidecar.recordqueue.get()
-            recindex=pop1[1]
-            rec1=pop1[2]
-            if rec1[0]=='Tpoint':
-                self.sidecar.records[recindex].append((t,self.T[rec1[1][0],rec1[1][1]]))
-            elif rec1[0]=='Tvol':
-                self.sidecar.records[recindex].append((t,self.T[rec1[1][0]:rec1[1][2],rec1[1][1]:rec1[1][3]]))
+        while (not self.sidecar.recordqueue.empty()) and self.sidecar.recordqueue.queue[0][0] <= t: # Check if there's something to record at t
+            _, recindex, (name, params) = self.sidecar.recordqueue.get()
+            if name=='Tpoint':
+                self.sidecar.records[recindex].append((t,self.T[params[0],params[1]]))
+            elif name=='Tvol':
+                self.sidecar.records[recindex].append((t,self.T[params[0]:params[2],params[1]:params[3]]))
         self.sidecar.t=t
 
     def apply_set(self,t):
         while (not self.sidecar.setqueue.empty()) and self.sidecar.setqueue.queue[0][0] <= t:
-            set1=self.sidecar.setqueue.get()[2]
-            if set1[0]=='Tsource':
-                if set1[1].shape==Tsource.shape:
-                    self.Tsource=set1[1]
-            elif set1[0]=='SARsource':
-                if set1[1].shape==Tsource.shape:
-                    self.Tsource=set1[1]/heatcapacity
-            elif set1[0]=='k':
-                if set1[1]>0:
-                    self.set_k(set1[1])
-            elif set1[0]=='sourcescale':
-                self.sourcescale=set1[1]
-            elif set1[0]=='tend':
-                self.tend=set1[1]
+            _, _, (setname, setval) = self.sidecar.setqueue.get()
+            if setname =='Tsource':
+                if setval.shape==Tsource.shape:
+                    self.Tsource=setval
+            elif setname=='SARsource':
+                if setval.shape==Tsource.shape:
+                    self.Tsource=setval/heatcapacity
+            elif setname=='k':
+                if setname>0:
+                    self.set_k(setval)
+            elif setname=='sourcescale':
+                self.sourcescale=setval
+            elif setname=='tend':
+                self.tend=setval
 
 def plot(out):
     fig, ax = plt.subplots()
