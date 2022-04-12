@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from communication import SideCar
 
 class TSolver:
-    def __init__(self, dx, n, Tinit, dt, Tsource, k, sourcescale, tend, sidecar):
+    def __init__(self, dx, n, Tinit, dt, Tsource, k, sourcescale, heatcapacity, tend, sidecar):
         self.T = Tinit
         self.t = 0
         self.dx = dx
@@ -17,8 +17,10 @@ class TSolver:
         self.Tsource = Tsource
         self.k = k
         self.sourcescale = sourcescale
+        self.heatcapacity = heatcapacity
         self.tend = tend
         self.sidecar = sidecar
+        
 
     def run(self):
         sidecar.wait_for_start_signal()
@@ -64,7 +66,7 @@ class TSolver:
                     self.Tsource=setval
             elif setname=='SARsource':
                 if setval.shape==Tsource.shape:
-                    self.Tsource=setval/heatcapacity
+                    self.Tsource=setval/self.heatcapacity
             elif setname=='k':
                 if setname>0:
                     self.set_k(setval)
@@ -106,8 +108,8 @@ if __name__ == "__main__":
     sidecar.canbegotten = ['Tpoint', 'Tvol']
     sidecar.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
 
-    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=500
-    solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, tend, sidecar)
+    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; heatcapacity=10; tend=500
+    solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, heatcapacity, tend, sidecar)
 
     out = solver.run()
     
