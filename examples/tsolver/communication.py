@@ -155,11 +155,9 @@ class SideCar:
     def continue_until(self,t,index=None): # schedule your wait point for later
         if self.io == "RESPONDER":
             self.wait_for_me_at(t,index);
-            #self.continue_please(index2);
-            mywait=self.waitqueue.get(index) # TODO: check that this works, python queue doesn't support get with index
+            mywait=self.waitqueue.get() # TODO: check that this works, python queue doesn't support get with index
             if mywait!=None:
-                #self.waitqueue.delete(index) # TODO as above. Once the item has been got, it should be "deleted" already
-                if self.waitqueue.queue[0]==None or self.waitqueue.queue[0][0]>self.t:
+                if self.waitqueue.queue[0][0]>self.t:
                     self.release();
 
         elif self.io == "REQUESTER":
@@ -272,6 +270,6 @@ class SideCar:
             #elif inst=='continueplease':
             #   self.continue_please(entry['index'])
             elif inst=='continueuntil':
-                self.continue_until(entry['t'],entry['index1'],entry['index2'])
+                self.continue_until(entry['t'],entry['index1'])
             elif inst=='start':
                 self.start()

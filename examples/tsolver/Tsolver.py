@@ -110,4 +110,5 @@ if __name__ == "__main__":
 
         out = solver.run()
         print(f"Temperature value at time {tend} is {out[10,10]}")
+        time.sleep(1)
         plot(out)

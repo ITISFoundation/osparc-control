@@ -47,6 +47,7 @@ class Controller:
         while not self.controlled.endsignal:
             self.controlled.wait_for_time(waittime,1000)
             entry = self.controlled.get(recindex)
+            # Check if variable has been recorded and update error
             if not entry:
                 error = error_prior
                 timestep=self.t-lasttime
@@ -58,20 +59,23 @@ class Controller:
                 error = self.setpoint - recval
                 timestep = rectime-lasttime
                 lasttime = rectime
-            self.errors.append(error)
-            self.controlledvals.append(recval)
+            # Update PID terms
             integral = integral_prior + error * timestep
             derivative = (error - error_prior) / timestep
             output=self.KP*error + self.KI*integral + self.KD*derivative + bias
-            newset=newset+output 
-
-            self.controlled.setnow(self.tweakparam_key, newset)
-            self.sets.append(newset)
             error_prior = error
             integral_prior = integral
+            # Update and send instruction to set new value
+            newset=newset+output 
+            self.controlled.setnow(self.tweakparam_key, newset)
+            # Record later and wait
             waittime=waittime+self.iteration_time
             recindex=self.controlled.record(self.regulationparam_key,waittime,self.regulationparam_otherparams)
             waitindex=self.controlled.continue_until(waittime,waitindex)
+            # Store output values            
+            self.errors.append(error)
+            self.controlledvals.append(recval)
+            self.sets.append(newset)
             print(self.controlled.finished())
         return {"set value":self.sets, "errors": self.errors, "controlled value": self.controlledvals}
 
