@@ -88,7 +88,7 @@ class SideCar:
         if (not self.setqueue.empty()) and self.setqueue.queue[0][0] <= t:
             entry = self.setqueue.get()
             return entry
-            
+
     def wait_a_bit(self):
         time.sleep(0.05);
         
@@ -171,6 +171,13 @@ class SideCar:
         else:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
+
+    def wait_for_start_signal(self):
+        while not self.startsignal:
+        # while not self.sidecar.started():
+            #time.sleep(0.05)
+            self.sync()
+        #self.sidecar.release()
 
     def pause(self):
         if (not self.paused) or (not self.startsignal):

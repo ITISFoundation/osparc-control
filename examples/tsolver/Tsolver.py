@@ -21,9 +21,9 @@ class TSolver:
         self.sidecar = sidecar
 
     def run(self):
-        self.wait_for_start_signal()
-        self.record(self.t)
-        self.apply_set(self.t)
+        sidecar.wait_for_start_signal()
+        #self.record(self.t) # Duplicate: controller sends instruction for this
+        #self.apply_set(self.t) # Duplicate: controller sends instruction for this
  
         while self.t<self.tend:
             print(f"Simulation time is {round(self.t,2)}")
@@ -35,24 +35,19 @@ class TSolver:
             self.T[1:n-1,1:n-1]=self.T[1:n-1,1:n-1]+self.dt*(self.sourcescale*self.Tsource+diffusion)
             self.t=self.t+self.dt
 
-        self.finish()
+        self.sidecar.finish()
         return self.T
-       
-    def wait_for_start_signal(self):
-        while not self.sidecar.startsignal:
-        # while not self.sidecar.started():
-            time.sleep(0.05)
-            self.sidecar.sync()
-        self.sidecar.release()
 
+    """ # Now uses sidecar finish()
     def finish(self):
         self.record(float("inf"))
         self.sidecar.finish()
         #self.sidecar.endsignal=True; #make function for this and the next line
         #self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
+    """
 
     def record(self,t):
-        entry = sidecar.get_record_entry(t) 
+        entry = sidecar.get_record_entry(t) # Check if a record request is present
         if entry:
             _, recindex, (name, params) = entry
             if name=='Tpoint':
@@ -61,7 +56,7 @@ class TSolver:
                 self.sidecar.records[recindex].append((t,self.T[params[0]:params[2],params[1]:params[3]]))
 
     def apply_set(self,t):
-        entry = sidecar.get_set_entry(t)
+        entry = sidecar.get_set_entry(t) # Check if a request to set a value is present
         if entry:
             _, _, (setname, setval) = entry
             if setname =='Tsource':
