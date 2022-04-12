@@ -152,7 +152,7 @@ class SideCar:
             return-1
     """ 
 
-    def continue_until(self,t,index=None,index2=None): # schedule your wait point for later
+    def continue_until(self,t,index=None): # schedule your wait point for later
         if self.io == "RESPONDER":
             self.wait_for_me_at(t,index);
             #self.continue_please(index2);
