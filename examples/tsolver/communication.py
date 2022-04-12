@@ -135,7 +135,7 @@ class SideCar:
         else:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
-
+    """
     def continue_please(self,index=None):
         if self.io == "RESPONDER":
             mywait=self.waitqueue.get(index) # TODO: check that this works, python queue doesn't support get with index
@@ -150,13 +150,18 @@ class SideCar:
         else:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
-        
+    """ 
 
     def continue_until(self,t,index=None,index2=None): # schedule your wait point for later
         if self.io == "RESPONDER":
             self.wait_for_me_at(t,index);
-            self.continue_please(index2);
-            return
+            #self.continue_please(index2);
+            mywait=self.waitqueue.get(index) # TODO: check that this works, python queue doesn't support get with index
+            if mywait!=None:
+                #self.waitqueue.delete(index) # TODO as above. Once the item has been got, it should be "deleted" already
+                if self.waitqueue.queue[0]==None or self.waitqueue.queue[0][0]>self.t:
+                    self.release();
+
         elif self.io == "REQUESTER":
             index1 = random.getrandbits(64)
             self.instructions.append({'inst':'continueuntil','t':t,'index1':index1,'index2':index})
@@ -264,8 +269,8 @@ class SideCar:
                 self.record(entry['key'],entry['timepoints'],entry['otherparams'],entry['index'])
             elif inst=='waitformeat':
                 self.wait_for_me_at(entry['t'],entry['index'])
-            elif inst=='continueplease':
-                self.continue_please(entry['index'])
+            #elif inst=='continueplease':
+            #   self.continue_please(entry['index'])
             elif inst=='continueuntil':
                 self.continue_until(entry['t'],entry['index1'],entry['index2'])
             elif inst=='start':

@@ -31,7 +31,7 @@ class Controller:
         integral_prior = 0
         bias = 0 
         lasttime=0
-        
+
         self.t = self.iteration_time
         
         # Record later and wait
@@ -43,7 +43,6 @@ class Controller:
         self.controlled.setnow(self.tweakparam_key, newset)
         # Send start signal
         self.controlled.start()
-        
         
         while not self.controlled.endsignal:
             self.controlled.wait_for_time(waittime,1000)
