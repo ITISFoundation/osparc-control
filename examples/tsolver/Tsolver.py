@@ -28,7 +28,7 @@ class TSolver:
         while self.t<self.tend:
             print(f"Simulation time is {round(self.t,2)}")
             self.record(self.t)
-            self.wait_if_necessary(self.t)
+            sidecar.wait_if_necessary(self.t)
             self.apply_set(self.t)  
             n=self.n
             diffusion=self.k/(self.dx*self.dx) * (self.T[:n-2,1:n-1]+self.T[1:n-1,:n-2]+self.T[2:n,1:n-1]+self.T[1:n-1,2:n]-4*self.T[1:n-1,1:n-1])
@@ -37,20 +37,11 @@ class TSolver:
 
         self.finish()
         return self.T
-    
-    def wait_a_bit(self):
-        time.sleep(0.05)
-        
-    def wait_if_necessary(self,t): #move what is possible into the sidecar
-        while self.sidecar.get_wait_status(t):
-            print("triggered wait_if_necessary")
-            self.wait_a_bit()
-
-
+       
     def wait_for_start_signal(self):
         while not self.sidecar.startsignal:
         # while not self.sidecar.started():
-            self.wait_a_bit()
+            time.sleep(0.05)
             self.sidecar.sync()
         self.sidecar.release()
 
@@ -61,17 +52,18 @@ class TSolver:
         #self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
 
     def record(self,t):
-        while (not self.sidecar.recordqueue.empty()) and self.sidecar.recordqueue.queue[0][0] <= t: # Check if there's something to record at t
-            _, recindex, (name, params) = self.sidecar.recordqueue.get()
+        entry = sidecar.get_record_entry(t) 
+        if entry:
+            _, recindex, (name, params) = entry
             if name=='Tpoint':
                 self.sidecar.records[recindex].append((t,self.T[params[0],params[1]]))
             elif name=='Tvol':
                 self.sidecar.records[recindex].append((t,self.T[params[0]:params[2],params[1]:params[3]]))
-        self.sidecar.t=t
 
     def apply_set(self,t):
-        while (not self.sidecar.setqueue.empty()) and self.sidecar.setqueue.queue[0][0] <= t:
-            _, _, (setname, setval) = self.sidecar.setqueue.get()
+        entry = sidecar.get_set_entry(t)
+        if entry:
+            _, _, (setname, setval) = entry
             if setname =='Tsource':
                 if setval.shape==Tsource.shape:
                     self.Tsource=setval

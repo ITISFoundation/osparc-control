@@ -9,9 +9,6 @@ class BaseControlError(Exception):
 class VariableNotAccessibleError(BaseControlError):
     """The variable can't be accessed for recording"""
 
-# TODO: assert can_be_set
-# TODO: assert can_be_gotten
-
 class SideCar:
     def __init__(self, interface, io):
         self.t=0
@@ -35,7 +32,7 @@ class SideCar:
     def setnow(self,key,value):
         if self.io == "RESPONDER":
             if(key in self.canbeset):
-                self.setqueue.put((self.t,"dummyidx",(key,value)))
+                self.setqueue.put((self.t, "", (key,value)))
                 return 0
             else:
                 raise VariableNotAccessibleError(f"Variable {key} cannot be set")
@@ -45,7 +42,7 @@ class SideCar:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
     """
-    # Doesn't see to be used
+    # Doesn't seem to be used
     def set1(self,key,value,t):
         if self.io == "RESPONDER":
             if(key in self.canbeset):
@@ -80,6 +77,18 @@ class SideCar:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
 
+    def get_record_entry(self, t):
+        self.t = t
+        if (not self.recordqueue.empty()) and self.recordqueue.queue[0][0] <= t: # Check if there's something to record at t
+            entry = self.recordqueue.get()
+            return entry
+
+    def get_set_entry(self, t):
+        self.t = t
+        if (not self.setqueue.empty()) and self.setqueue.queue[0][0] <= t:
+            entry = self.setqueue.get()
+            return entry
+            
     def wait_a_bit(self):
         time.sleep(0.05);
         
@@ -95,6 +104,11 @@ class SideCar:
             counter+=1
         if self.t<waittime:
             print('timeout')
+
+    def wait_if_necessary(self,t): #move what is possible into the sidecar
+        while self.get_wait_status(t):
+            print("triggered wait_if_necessary")
+            self.wait_a_bit()
     
     def get_wait_status(self, t):
         self.sync()

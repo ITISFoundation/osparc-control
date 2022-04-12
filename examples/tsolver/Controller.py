@@ -43,26 +43,27 @@ class Controller:
         
         while not self.controlled.endsignal:
             self.controlled.wait_for_time(waittime,1000)
-            get1=self.controlled.get(recindex)
-            if not get1:
-                error1 = error_prior
+            entry = self.controlled.get(recindex)[0]
+            if not entry:
+                error = error_prior
                 timestep=self.t-lasttime
                 lasttime=self.t
                 print('problem?')
             else:
-                error1 = self.setpoint - get1[0][1]
-                timestep=get1[0][0]-lasttime
-                lasttime=get1[0][0]
-            self.errors.append(error1)
-            self.controlledvals.append(get1[0][1])
-            integral = integral_prior + error1 * timestep
-            derivative = (error1 - error_prior) / timestep
-            output=self.KP*error1 + self.KI*integral + self.KD*derivative + bias
+                rectime, recval = entry
+                error = self.setpoint - recval
+                timestep = rectime-lasttime
+                lasttime = rectime
+            self.errors.append(error)
+            self.controlledvals.append(recval)
+            integral = integral_prior + error * timestep
+            derivative = (error - error_prior) / timestep
+            output=self.KP*error + self.KI*integral + self.KD*derivative + bias
             newset=newset+output 
 
             self.controlled.setnow(self.tweakparam_key, newset)
             self.sets.append(newset)
-            error_prior = error1
+            error_prior = error
             integral_prior = integral
             waittime=waittime+self.iteration_time
             recindex=self.controlled.record(self.regulationparam_key,waittime,self.regulationparam_otherparams)
