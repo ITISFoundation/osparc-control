@@ -63,10 +63,8 @@ class SideCar:
         return self.canbegotten
 
     def record(self,key,timepoints,otherparams,index=None): # when and where to record observables
-        ncalls = 0
         if self.io == "RESPONDER":
             if key in self.canbegotten:
-                ncalls += 1
                 self.recordqueue.put((timepoints,index,(key,otherparams))) #xxx problem with more than one timepoint
                 self.records[index]=[]
             else:
@@ -154,25 +152,25 @@ class SideCar:
 
     def continue_until(self,t,index=None): # schedule your wait point for later
         if self.io == "RESPONDER":
-            self.wait_for_me_at(t,index);
+            self.wait_for_me_at(t,index)
             mywait=self.waitqueue.get() # TODO: check that this works, python queue doesn't support get with index
             if mywait!=None:
                 if self.waitqueue.queue[0][0]>self.t:
-                    self.release();
+                    self.release()
 
         elif self.io == "REQUESTER":
             index1 = random.getrandbits(64)
             self.instructions.append({'inst':'continueuntil','t':t,'index1':index1,'index2':index})
             self.release()
-            return index1;
+            return index1
         else:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
 
     def start(self):
         if self.io == "RESPONDER":
-            self.startsignal=True;
-            self.release();
+            self.startsignal=True
+            self.release()
         elif self.io == "REQUESTER":
             self.instructions.append({'inst':'start'})
             self.release()
@@ -182,8 +180,6 @@ class SideCar:
 
     def wait_for_start_signal(self):
         while not self.startsignal:
-        # while not self.sidecar.started():
-            #time.sleep(0.05)
             self.sync()
         #self.sidecar.release()
 
@@ -199,7 +195,7 @@ class SideCar:
             self.sync()
 
     def finished(self):
-        return self.endsignal;
+        return self.endsignal
 
     def sync(self):
         if self.io == "RESPONDER":
