@@ -9,6 +9,9 @@ class BaseControlError(Exception):
 class VariableNotAccessibleError(BaseControlError):
     """The variable can't be accessed for recording"""
 
+#class EntryNotAvailable(BaseControlError):
+#    """The entry is not available"""
+
 class SideCar:
     def __init__(self, interface, io):
         self.t=0
@@ -93,8 +96,10 @@ class SideCar:
         time.sleep(0.05);
         
     def get(self,index):
-        return self.records[index]
-   
+        entry = self.records[index]
+        if entry:
+            return entry
+
     def wait_for_time(self,waittime,maxcount):
         counter=0;
         while self.t<waittime and counter<maxcount:

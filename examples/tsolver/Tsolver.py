@@ -20,7 +20,6 @@ class TSolver:
         self.heatcapacity = heatcapacity
         self.tend = tend
         self.sidecar = sidecar
-        
 
     def run(self):
         sidecar.wait_for_start_signal()
@@ -67,9 +66,6 @@ class TSolver:
             elif setname=='SARsource':
                 if setval.shape==Tsource.shape:
                     self.Tsource=setval/self.heatcapacity
-            elif setname=='k':
-                if setname>0:
-                    self.set_k(setval)
             elif setname=='sourcescale':
                 self.sourcescale=setval
             elif setname=='tend':
