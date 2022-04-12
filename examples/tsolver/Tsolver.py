@@ -103,18 +103,15 @@ if __name__ == "__main__":
     remote_port=1234,
     listen_port=1235)
 
-    control_interface.start_background_sync()
-    sidecar = SideCar(control_interface, "RESPONDER")
-    sidecar.canbegotten = ['Tpoint', 'Tvol']
-    sidecar.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
-
-    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; heatcapacity=10; tend=500
-    solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, heatcapacity, tend, sidecar)
-
-    out = solver.run()
+    with control_interface:
+        sidecar = SideCar(control_interface, "RESPONDER")
     
-    print(out[10,10])
-    
-    time.sleep(1)
-    control_interface.stop_background_sync()
-    plot(out)
+        sidecar.canbegotten = ['Tpoint', 'Tvol']
+        sidecar.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
+
+        n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; heatcapacity=10; tend=500
+        solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, heatcapacity, tend, sidecar)
+
+        out = solver.run()
+        print(f"Temperature value at time {tend} is {out[10,10]}")
+        plot(out)

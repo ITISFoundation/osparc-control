@@ -97,13 +97,12 @@ if __name__ == "__main__":
     remote_port=1235,
     listen_port=1234,
    )
-    control_interface.start_background_sync()
-    sidecar = SideCar(control_interface, "REQUESTER")
 
-    controller = Controller('sourcescale', 1, 'Tpoint', [10,10], 4, 10, 0.01, 0.00, 0, sidecar)
-    out = controller.run()
-    control_interface.stop_background_sync()
-
+    with control_interface:
+        sidecar = SideCar(control_interface, "REQUESTER")
+        controller = Controller('sourcescale', 1, 'Tpoint', [10,10], 4, 10, 0.01, 0.00, 0, sidecar)
+        out = controller.run()
+    
     plot(out)
 
 
