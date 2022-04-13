@@ -6,6 +6,7 @@ from subprocess import STDOUT  # noqa: S404
 from time import sleep
 from typing import List
 
+import pip
 import pytest
 
 
@@ -25,6 +26,13 @@ def example_1_simple_path(examples_path: Path) -> Path:
 @pytest.fixture
 def example_2_base_time_add_path(examples_path: Path) -> Path:
     path = (examples_path / "2_base_time_add").resolve()
+    assert path.exists()
+    return path
+
+
+@pytest.fixture
+def example_3_tsolver(examples_path: Path) -> Path:
+    path = (examples_path / "3_tsolver").resolve()
     assert path.exists()
     return path
 
@@ -62,6 +70,11 @@ def assert_run_in_parallel(scrips_to_run: List[Path]) -> None:
             assert process.returncode == 0, stdout.decode()
 
 
+@pytest.fixture
+def install_matplotlib() -> None:
+    pip.main(["install", "matplotlib"])
+
+
 # TESTS
 
 
@@ -75,5 +88,14 @@ def test_example_1_simple_runs(example_1_simple_path: Path) -> None:
 def test_example_2_base_time_add_runs(example_2_base_time_add_path: Path) -> None:
     controller_path = example_2_base_time_add_path / "controller.py"
     solver_path = example_2_base_time_add_path / "solver.py"
+
+    assert_run_in_parallel([controller_path, solver_path])
+
+
+def test_example_example_3_tsolver(
+    example_3_tsolver: Path, install_matplotlib: None
+) -> None:
+    controller_path = example_3_tsolver / "Tsolver.py"
+    solver_path = example_3_tsolver / "Controller.py"
 
     assert_run_in_parallel([controller_path, solver_path])
