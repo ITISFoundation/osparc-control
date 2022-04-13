@@ -207,7 +207,6 @@ class EMsolver:
 
     def wait_for_start_signal(self):
         while not self.sidecar.startsignal:
-        # while not self.sidecar.started():
             self.wait_a_bit()
             self.sidecar.sync()
         self.sidecar.release()
@@ -217,16 +216,16 @@ class EMsolver:
         self.sidecar.finish()
 
     def record(self,t):
-        recindex,recinfo=self.sidecar.is_there_something_to_record(t)
+        recindex,recinfo=self.sidecar.get_record_entry(t)
         while not (recindex is None):
             if recinfo[0]=='SARvol':
                 record = self.SAR[recinfo[1][0]:recinfo[1][2],recinfo[1][1]:recinfo[1][3]];
                 record = record.tolist()
                 self.sidecar.record_for_me(recindex,t,record)
-            recindex,recinfo=self.sidecar.is_there_something_to_record(t)
+            recindex,recinfo=self.sidecar.get_record_entry(t)
 
     def apply_set(self,t):
-        setinfo=self.sidecar.is_there_something_to_set(t)
+        setinfo=self.sidecar.get_set_entry(t)
         while not (setinfo is None):
             if setinfo[0]=='sigma':
                 sigma1=np.asarray(setinfo[1])
@@ -238,7 +237,7 @@ class EMsolver:
                     self.sigma=self.sigma_calc(T1)
             elif setinfo[0]=='tend':
                 self.tend=setinfo[1]
-            setinfo=self.sidecar.is_there_something_to_set(t)                
+            setinfo=self.sidecar.get_set_entry(t)                
 
 
 class EMSolverSideCar(SideCar):

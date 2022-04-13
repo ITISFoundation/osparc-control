@@ -7,52 +7,7 @@ import numpy as np
 from queue import PriorityQueue
 from operator import truediv
 
-class KindofPriorityQueue():
-    
-    def __init__(self):
-        self.myqueue = []
-        
-    def pop(self):
-        if not self.myqueue:
-            return None
-        return self.myqueue.pop()
-    
-    def insert(self,t,elem):
-        retval=random.getrandbits(64)
-        self.myqueue.append((t, retval, elem))
-        self.myqueue.sort(reverse=True) 
-        return retval
-    
-    def insert_with_index(self,t,elem,index):
-        self.myqueue.append((t, index, elem))
-        self.myqueue.sort(reverse=True)
-        
-    def delete(self, index):
-        counter=0
-        while counter<len(self.myqueue) and self.myqueue[counter][1]!=index:
-            counter+=1
-        if counter<len(self.myqueue):
-            del self.myqueue[counter]
-            
-    def deleteall(self):
-        self.myqueue = []
-            
-    def first(self):
-        if not self.myqueue:
-            return None
-        return self.myqueue[-1]
-    
-    def get(self, index):
-        retval=None
-        counter=0
-        while counter<len(self.myqueue) and self.myqueue[counter][1]!=index:
-            counter+=1
-        if counter<len(self.myqueue):
-            retval=self.myqueue[counter]
-        return retval
-    
-    def empty(self):
-        return not self.myqueue
+
 
 class BaseControlError(Exception):
     """inherited by all exceptions in this module"""
@@ -60,20 +15,17 @@ class BaseControlError(Exception):
 class VariableNotAccessibleError(BaseControlError):
     """The variable can't be accessed for recording"""
 
-
 class SideCar:
     def __init__(self, interface, io):
-        self.t=0;
-        self.startsignal=False;
-        self.endsignal=False;
-        self.paused=True;
-        #self.getsignal=False;
-        self.waitqueue=KindofPriorityQueue()
-        self.recordqueue=KindofPriorityQueue()
-        self.setqueue=KindofPriorityQueue()
+        self.t=0
+        self.startsignal=False
+        self.endsignal=False
+        self.paused=True
+        self.waitqueue=PriorityQueue()
+        self.recordqueue=PriorityQueue()
+        self.setqueue=PriorityQueue()
         self.records={}
-        self.instructions=[]
-        self.instructioncounter=0
+        self.instructions= [] #{}
         self.canbeset=[]
         self.canbegotten=[]
         self.interface=interface
@@ -82,50 +34,35 @@ class SideCar:
     def can_be_set(self): # controllable parameters of the model
         return self.canbeset; 
     
-    def is_there_something_to_set(self,t):
-        self.t=t
-        if (not self.setqueue.empty()) and self.setqueue.first()[0] <= t:
-            return self.setqueue.pop()[2]
-        else:
-            return None
-
     def setnow(self,key,value):
         if self.io == "RESPONDER":
             if(key in self.canbeset):
-                self.setqueue.insert(self.t,(key,value))
+                self.setqueue.put((self.t, "", (key,value)))
                 return 0
-            return -1
+            else:
+                raise VariableNotAccessibleError(f"Variable {key} cannot be set")
         elif self.io == "REQUESTER":
-            # if isinstance(value, np.ndarray):
-            #     value = value.tolist()
             self.instructions.append({'inst':'setnow','key':key,'val':value})
         else:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
 
-    def set1(self,key,value,t):
-        if self.io == "RESPONDER":
-            if(key in self.canbeset):
-                self.setqueue.insert(t,(key,value))
-                return 0
-            return -1;
-        elif self.io == "REQUESTER":
-            self.instructions.append({'inst':'set','t':t,'key':key,'val':value})
-        else:
-            print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
-            return-1
-
+    # def set_at_t(self,key,value,t):
+    #     if self.io == "RESPONDER":
+    #         if(key in self.canbeset):
+    #             self.setqueue.put((t,"",(key,value)))
+    #             return 0
+    #         else:
+    #             raise VariableNotAccessibleError(f"Variable {key} cannot be set")
+    #         return -1
+    #     elif self.io == "REQUESTER":
+    #         self.instructions.append({'inst':'set','t':t,'key':key,'val':value})
+    #     else:
+    #         print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
+    #         return-1
 
     def can_be_gotten(self): # observables of the model (similar to sensor)
         return self.canbegotten
-
-    def is_there_something_to_record(self,t):
-        self.t=t
-        if (not self.recordqueue.empty()) and self.recordqueue.first()[0] <= t:
-            pop1=self.recordqueue.pop()
-            return pop1[1],pop1[2]
-        else:
-            return None,None
 
     def record_for_me(self,recindex,t,item):
         self.records[recindex].append((t,item))
@@ -134,9 +71,11 @@ class SideCar:
     def record(self,key,timepoints,otherparams,index=None): # when and where to record observables
         if self.io == "RESPONDER":
             if key in self.canbegotten:
-                self.recordqueue.insert_with_index(timepoints,(key,otherparams),index) #xxx problem with more than one timepoint
+                self.recordqueue.put((timepoints,index,(key,otherparams))) #xxx problem with more than one timepoint
                 self.records[index]=[]
-            return 0
+            else:
+                raise VariableNotAccessibleError(f"Variable {key} cannot be recorded ")
+
         elif self.io == "REQUESTER":
             index = random.getrandbits(64)
             self.instructions.append({'inst':'record','timepoints':timepoints,'key':key,'otherparams':otherparams,'index':index})
@@ -145,7 +84,21 @@ class SideCar:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
 
-    def wait_a_bit(self):
+    def get_record_entry(self, t):
+        self.t = t
+        if (not self.recordqueue.empty()) and self.recordqueue.queue[0][0] <= t: # Check if there's something to record at t
+            entry = self.recordqueue.get()
+            return entry[1], entry[2]
+        else:
+            return None, None
+
+    def get_set_entry(self, t):
+        self.t = t
+        if (not self.setqueue.empty()) and self.setqueue.queue[0][0] <= t:
+            entry = self.setqueue.get()
+            return entry[2]
+            
+    def _sleep05(self):
         time.sleep(0.05);
         
     def get(self,index):
@@ -155,16 +108,18 @@ class SideCar:
         counter=0;
         while self.t<waittime and counter<maxcount:
             self.sync()
-            self.sync()
-            self.wait_a_bit()
+            self._sleep05()
             counter+=1
         if self.t<waittime:
             print('timeout')
 
+    def wait_if_necessary(self,t): #move what is possible into the sidecar
+        while self.get_wait_status(t):
+            self._sleep05()
+
     def get_wait_status(self, t):
         self.sync()
-        # print(self.waitqueue.myqueue)
-        if (not self.waitqueue.empty()) and (self.waitqueue.first()[0] <= t):
+        if (not self.waitqueue.empty()) and (self.waitqueue.queue[0][0] <= t):
             self.pause()
             self.sync()
             return True
@@ -183,9 +138,9 @@ class SideCar:
     def get_time(self):
         return self.t;
 
-    def wait_for_me_at(self,t,index=None):
+    def wait_at_t(self,t,index=None):
         if self.io == "RESPONDER":
-            self.waitqueue.insert_with_index(t,None,index)
+            self.waitqueue.put((t,None,index))
         elif self.io == "REQUESTER":
             index = random.getrandbits(64)
             self.instructions.append({'inst':'waitformeat','t':t,'index':index})
@@ -198,10 +153,10 @@ class SideCar:
         if self.io == "RESPONDER":
             mywait=self.waitqueue.get(index)
             if mywait!=None:
-                self.waitqueue.delete(index)
-                if self.waitqueue.first()==None or self.waitqueue.first()[0]>self.t:
+                if self.waitqueue.queue[0]==None or self.waitqueue.queue[0][0]>self.t:
                     self.release();
         elif self.io == "REQUESTER":
+            index = random.getrandbits(64)
             self.instructions.append({'inst':'continueplease','index':index})
             self.release()
         else:
@@ -211,7 +166,7 @@ class SideCar:
 
     def continue_until(self,t,index=None,index2=None): # schedule your wait point for later
         if self.io == "RESPONDER":
-            self.wait_for_me_at(t,index);
+            self.wait_at_t(t,index);
             self.continue_please(index2);
             return
         elif self.io == "REQUESTER":
@@ -237,11 +192,10 @@ class SideCar:
     def pause(self):
         if (not self.paused) or (not self.startsignal):
             self.paused=True
-            self.sync()
+
         
     def release(self):
         if self.paused:
-            self.sync()
             self.paused=False 
             self.sync()
 
@@ -255,7 +209,6 @@ class SideCar:
             for command in commands:
                 if command.action == "command_instruct":
                     inputdata = command.params
-                    print(str(inputdata))
                 elif command.action == "command_retrieve":
                     records = self.records
                     if isinstance(records, np.ndarray):
@@ -264,21 +217,20 @@ class SideCar:
                     self.interface.request_without_reply(
                         "command_data", params=outputdata
                     )
-                    print("got retrieve")
                 if inputdata != None:
                     self.instructions=inputdata['instructions']
-                    self.executeInstructions()
-                    print("Successfully executed " + str(inputdata))
+                    if len(self.instructions) > 0:
+                        self.executeInstructions()
+
             
         elif self.io == "REQUESTER":
-            print(self.instructions)
             if self.instructions:
                 outputdata={'instructions':self.instructions}
                 self.interface.request_without_reply(
                     "command_instruct", params=outputdata
                 )
             self.interface.request_without_reply("command_retrieve")
-            print("asked to get state...")
+            self.instructions=[]
 
             inputdata = None
             commands = self.interface.get_incoming_requests()
@@ -297,7 +249,7 @@ class SideCar:
 
 
     def finish(self):
-            self.waitqueue.deleteall();
+
             self.endsignal=True; #make function for this and the next line
             records = self.records
             if isinstance(records, np.ndarray):
@@ -310,24 +262,18 @@ class SideCar:
 
     def executeInstructions(self):
         l=len(self.instructions)
-        
-        while self.instructioncounter<l:
-            i=self.instructioncounter
-            inst=self.instructions[i]['inst']
-            self.instructioncounter=i+1
+        for _ in range(l):
+            entry = self.instructions.pop(0)
+            inst = entry['inst']
             if inst=='setnow':
-                self.setnow(self.instructions[i]['key'],self.instructions[i]['val'])
-            elif inst=='set':
-                self.set1(self.instructions[i]['key'],self.instructions[i]['val'],self.instructions[i]['t'])
+                self.setnow(entry['key'],entry['val'])
             elif inst=='record':
-                self.record(self.instructions[i]['key'],self.instructions[i]['timepoints'],self.instructions[i]['otherparams'],self.instructions[i]['index'])
+                self.record(entry['key'],entry['timepoints'],entry['otherparams'],entry['index'])
             elif inst=='waitformeat':
-                self.wait_for_me_at(self.instructions[i]['t'],self.instructions[i]['index'])
+                self.wait_at_t(entry['t'],entry['index'])
             elif inst=='continueplease':
-                self.continue_please(self.instructions[i]['index'])
+                self.continue_please(entry['index'])
             elif inst=='continueuntil':
-                self.continue_until(self.instructions[i]['t'],self.instructions[i]['index1'],self.instructions[i]['index2'])
+                self.continue_until(entry['t'],entry['index1'],entry['index2'])
             elif inst=='start':
                 self.start()
-            else:
-                print("Unknown or null instruction.")

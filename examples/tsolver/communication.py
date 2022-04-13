@@ -1,7 +1,13 @@
-from operator import truediv
+
 import random
 import time
+
+import numpy as np
+
 from queue import PriorityQueue
+from operator import truediv
+
+
 
 class BaseControlError(Exception):
     """inherited by all exceptions in this module"""
@@ -15,7 +21,6 @@ class SideCar:
         self.startsignal=False
         self.endsignal=False
         self.paused=True
-        #self.getsignal=False;
         self.waitqueue=PriorityQueue()
         self.recordqueue=PriorityQueue()
         self.setqueue=PriorityQueue()
@@ -28,7 +33,7 @@ class SideCar:
 
     def can_be_set(self): # controllable parameters of the model
         return self.canbeset; 
-
+    
     def setnow(self,key,value):
         if self.io == "RESPONDER":
             if(key in self.canbeset):
@@ -41,29 +46,31 @@ class SideCar:
         else:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
-    """
-    # Doesn't seem to be used
-    def set1(self,key,value,t):
-        if self.io == "RESPONDER":
-            if(key in self.canbeset):
-                self.setqueue.insert(t,(key,value))
-                return 0
-            return -1;
-        elif self.io == "REQUESTER":
-            self.instructions.append({'inst':'set','t':t,'key':key,'val':value})
-        else:
-            print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
-            return-1
-    """
+
+    # def set_at_t(self,key,value,t):
+    #     if self.io == "RESPONDER":
+    #         if(key in self.canbeset):
+    #             self.setqueue.put((t,"",(key,value)))
+    #             return 0
+    #         else:
+    #             raise VariableNotAccessibleError(f"Variable {key} cannot be set")
+    #         return -1
+    #     elif self.io == "REQUESTER":
+    #         self.instructions.append({'inst':'set','t':t,'key':key,'val':value})
+    #     else:
+    #         print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
+    #         return-1
 
     def can_be_gotten(self): # observables of the model (similar to sensor)
         return self.canbegotten
 
+    def record_for_me(self,recindex,t,item):
+        self.records[recindex].append((t,item))
+        self.t=t
+        
     def record(self,key,timepoints,otherparams,index=None): # when and where to record observables
-        ncalls = 0
         if self.io == "RESPONDER":
             if key in self.canbegotten:
-                ncalls += 1
                 self.recordqueue.put((timepoints,index,(key,otherparams))) #xxx problem with more than one timepoint
                 self.records[index]=[]
             else:
@@ -81,46 +88,57 @@ class SideCar:
         self.t = t
         if (not self.recordqueue.empty()) and self.recordqueue.queue[0][0] <= t: # Check if there's something to record at t
             entry = self.recordqueue.get()
-            return entry
+            return entry[1], entry[2]
+        else:
+            return None, None
 
     def get_set_entry(self, t):
         self.t = t
         if (not self.setqueue.empty()) and self.setqueue.queue[0][0] <= t:
             entry = self.setqueue.get()
-            return entry
+            return entry[2]
             
-    def wait_a_bit(self):
+    def _sleep05(self):
         time.sleep(0.05);
         
     def get(self,index):
         return self.records[index]
-   
+
     def wait_for_time(self,waittime,maxcount):
         counter=0;
         while self.t<waittime and counter<maxcount:
             self.sync()
-            #self.sync() # Second call seems unnecessary
-            self.wait_a_bit()
+            self._sleep05()
             counter+=1
         if self.t<waittime:
             print('timeout')
 
     def wait_if_necessary(self,t): #move what is possible into the sidecar
         while self.get_wait_status(t):
-            print("triggered wait_if_necessary")
-            self.wait_a_bit()
-    
+            self._sleep05()
+
     def get_wait_status(self, t):
         self.sync()
         if (not self.waitqueue.empty()) and (self.waitqueue.queue[0][0] <= t):
             self.pause()
-            #self.sync() # This call seems unnecessary
+            self.sync()
             return True
         else:
             self.release()
             return False
 
-    def wait_for_me_at(self,t,index=None):
+    def started(self):
+        if not self.startsignal:
+            self.sync()
+            return True
+        else:
+            self.release()
+            return False
+
+    def get_time(self):
+        return self.t;
+
+    def wait_at_t(self,t,index=None):
         if self.io == "RESPONDER":
             self.waitqueue.put((t,None,index))
         elif self.io == "REQUESTER":
@@ -133,9 +151,8 @@ class SideCar:
 
     def continue_please(self,index=None):
         if self.io == "RESPONDER":
-            mywait=self.waitqueue.get(index) # TODO: check that this works, python queue doesn't support get with index
+            mywait=self.waitqueue.get(index)
             if mywait!=None:
-                #self.waitqueue.delete(index) # TODO as above. Once the item has been got, it should be "deleted" already
                 if self.waitqueue.queue[0]==None or self.waitqueue.queue[0][0]>self.t:
                     self.release();
         elif self.io == "REQUESTER":
@@ -149,7 +166,7 @@ class SideCar:
 
     def continue_until(self,t,index=None,index2=None): # schedule your wait point for later
         if self.io == "RESPONDER":
-            self.wait_for_me_at(t,index);
+            self.wait_at_t(t,index);
             self.continue_please(index2);
             return
         elif self.io == "REQUESTER":
@@ -175,11 +192,10 @@ class SideCar:
     def pause(self):
         if (not self.paused) or (not self.startsignal):
             self.paused=True
-            #self.sync() # Doesn't seem necessary
+
         
     def release(self):
         if self.paused:
-            #self.sync() # Doesn't seem necessary
             self.paused=False 
             self.sync()
 
@@ -194,18 +210,20 @@ class SideCar:
                 if command.action == "command_instruct":
                     inputdata = command.params
                 elif command.action == "command_retrieve":
-                    outputdata={'t':self.t, 'endsignal':self.endsignal, 'paused':self.paused, 'records':self.records} # start?
+                    records = self.records
+                    if isinstance(records, np.ndarray):
+                        records = records.tolist()
+                    outputdata={'t':self.t, 'endsignal':self.endsignal, 'paused':self.paused, 'records':records} # start?
                     self.interface.request_without_reply(
                         "command_data", params=outputdata
                     )
-                    print("got retrieve")
                 if inputdata != None:
                     self.instructions=inputdata['instructions']
                     if len(self.instructions) > 0:
                         self.executeInstructions()
-                        print("Successfully executed " + str(inputdata))
 
-        elif self.io == "REQUESTER": 
+            
+        elif self.io == "REQUESTER":
             if self.instructions:
                 outputdata={'instructions':self.instructions}
                 self.interface.request_without_reply(
@@ -213,9 +231,8 @@ class SideCar:
                 )
             self.interface.request_without_reply("command_retrieve")
             self.instructions=[]
-            print("asked to get state...")
 
-            inputdata = None        
+            inputdata = None
             commands = self.interface.get_incoming_requests()
             for command in commands:
                 if command.action == "command_data":
@@ -229,17 +246,19 @@ class SideCar:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
 
-           
+
 
     def finish(self):
-            #self.waitqueue.deleteall(); # Queue should be already empty at the end
-            self.endsignal=True; #make function for this and the next line
 
+            self.endsignal=True; #make function for this and the next line
+            records = self.records
+            if isinstance(records, np.ndarray):
+                records = records.tolist()
             self.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
-            outputdata={'t':self.t, 'endsignal':self.endsignal, 'paused':self.paused, 'records':self.records} # start?
+            outputdata={'t':self.t, 'endsignal':self.endsignal, 'paused':self.paused, 'records':records} # start?
             self.interface.request_without_reply(
                 "command_data", params=outputdata
-            ) 
+            )     
 
     def executeInstructions(self):
         l=len(self.instructions)
@@ -251,7 +270,7 @@ class SideCar:
             elif inst=='record':
                 self.record(entry['key'],entry['timepoints'],entry['otherparams'],entry['index'])
             elif inst=='waitformeat':
-                self.wait_for_me_at(entry['t'],entry['index'])
+                self.wait_at_t(entry['t'],entry['index'])
             elif inst=='continueplease':
                 self.continue_please(entry['index'])
             elif inst=='continueuntil':

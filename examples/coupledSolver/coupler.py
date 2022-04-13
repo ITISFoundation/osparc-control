@@ -24,8 +24,8 @@ class EM_T_coupler:
         recindexEM=self.sidecarsateliteEM.record(self.EMgetparam_key, self.coupling_interval, self.EMgetparam_otherparams)
         recindexT=self.sidecarsateliteT.record(self.Tgetparam_key, self.coupling_interval, self.Tgetparam_otherparams)
 
-        waitindexEM=self.sidecarsateliteEM.wait_for_me_at(self.coupling_interval)
-        waitindexT=self.sidecarsateliteT.wait_for_me_at(self.coupling_interval)
+        waitindexEM=self.sidecarsateliteEM.wait_at_t(self.coupling_interval)
+        waitindexT=self.sidecarsateliteT.wait_at_t(self.coupling_interval)
         self.sidecarsateliteEM.start()
         self.sidecarsateliteT.start()
         nexttime=self.coupling_interval

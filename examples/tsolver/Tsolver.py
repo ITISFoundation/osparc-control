@@ -7,18 +7,19 @@ import matplotlib.pyplot as plt
 from communication import SideCar
 
 class TSolver:
-    def __init__(self, dx, n, Tinit, dt, Tsource, k, sourcescale, tend, sidecar):
-        self.T = Tinit
-        self.t = 0
-        self.dx = dx
-        self.n = n
-        self.Tinit = Tinit
-        self.dt = dt
-        self.Tsource = Tsource
-        self.k = k
-        self.sourcescale = sourcescale
-        self.tend = tend
-        self.sidecar = sidecar
+    def __init__(self, dx, n, Tinit, dt, Tsource, k,heatcapacity, sourcescale, tend, sidecar):
+        self.T = Tinit;
+        self.t = 0;
+        self.dx = dx;
+        self.n = n;
+        self.Tinit = Tinit;
+        self.dt = dt;
+        self.Tsource = Tsource;
+        self.k = k;
+        self.sourcescale = sourcescale;
+        self.tend = tend;
+        self.sidecar = sidecar;
+        self.heatcapacity=10
 
     def run(self):
         self.wait_for_start_signal()
@@ -40,7 +41,6 @@ class TSolver:
        
     def wait_for_start_signal(self):
         while not self.sidecar.startsignal:
-        # while not self.sidecar.started():
             time.sleep(0.05)
             self.sidecar.sync()
         self.sidecar.release()
@@ -48,13 +48,11 @@ class TSolver:
     def finish(self):
         self.record(float("inf"))
         self.sidecar.finish()
-        #self.sidecar.endsignal=True; #make function for this and the next line
-        #self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
-
+ 
     def record(self,t):
         entry = sidecar.get_record_entry(t) 
-        if entry:
-            _, recindex, (name, params) = entry
+        if entry[0]:
+            recindex, (name, params) = entry
             if name=='Tpoint':
                 self.sidecar.records[recindex].append((t,self.T[params[0],params[1]]))
             elif name=='Tvol':
@@ -63,16 +61,13 @@ class TSolver:
     def apply_set(self,t):
         entry = sidecar.get_set_entry(t)
         if entry:
-            _, _, (setname, setval) = entry
+            (setname, setval) = entry
             if setname =='Tsource':
                 if setval.shape==Tsource.shape:
                     self.Tsource=setval
             elif setname=='SARsource':
                 if setval.shape==Tsource.shape:
-                    self.Tsource=setval/heatcapacity
-            elif setname=='k':
-                if setname>0:
-                    self.set_k(setval)
+                    self.Tsource=setval/self.heatcapacity
             elif setname=='sourcescale':
                 self.sourcescale=setval
             elif setname=='tend':
@@ -110,13 +105,20 @@ if __name__ == "__main__":
     sidecar = SideCar(control_interface, "RESPONDER")
     sidecar.canbegotten = ['Tpoint', 'Tvol']
     sidecar.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
-
-    n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; tend=500
-    solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, tend, sidecar)
-
-    out = solver.run()
     
-    print(out[10,10])
+    # Define initial conditions
+    n=20
+    t_start = np.zeros((n,n), float)
+    dt = 0.1
+    thermo_source=np.ones((n-2,n-2), float)
+    dx = 1
+    k = 1
+    sourcescale = 1 
+    t_end = 500
+
+    # Run the Thermal Solver
+    solver = TSolver(dx, n, t_start, dt, thermo_source, k, 10, sourcescale, t_end, sidecar)
+    out = solver.run()
     
     time.sleep(1)
     control_interface.stop_background_sync()

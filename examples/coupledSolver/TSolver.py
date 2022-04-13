@@ -57,7 +57,6 @@ class Tsolver:
 
     def wait_for_start_signal(self):
         while not self.sidecar.startsignal:
-        # while not self.sidecar.started():
             self.wait_a_bit()
             self.sidecar.sync()
         self.sidecar.release()
@@ -70,40 +69,39 @@ class Tsolver:
         # self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
 
     def record(self,t):
-        while (not self.sidecar.recordqueue.empty()) and self.sidecar.recordqueue.first()[0] <= t:
-            pop1=self.sidecar.recordqueue.pop()
-            recindex=pop1[1]
-            rec1=pop1[2]
-            record=None
-            if rec1[0]=='Tpoint':
-                record = self.T[rec1[1][0],rec1[1][1]]
+        entry = self.sidecar.get_record_entry(t)
+        record = None
+
+        if entry[0]:
+            recindex, (name, params) = entry
+            if name=='Tpoint':
+                record = self.T[params[0],params[1]]
                 record = record.tolist()
-            elif rec1[0]=='Tvol':
-                record = self.T[rec1[1][0]:rec1[1][2],rec1[1][1]:rec1[1][3]]
+            elif name =='Tvol':
+                # import pdb; pdb.set_trace()
+                record = self.T[params[0]:params[2],params[1]:params[3]]
                 record = record.tolist()
             else:
-                print("Record key not understood: " + str(rec1[0]))
+                print("Record key not understood: " + str(name))
             self.sidecar.records[recindex].append((t,record))
         self.sidecar.t=t
 
     def apply_set(self,t):
-        while (not self.sidecar.setqueue.empty()) and self.sidecar.setqueue.first()[0] <= t:
-            set1=self.sidecar.setqueue.pop()[2]
-            if set1[0]=='Tsource':
-                dat=np.asarray(set1[1])
+        entry = self.sidecar.get_set_entry(t)
+        if entry:
+            (setname, setval) = entry
+            if setname =='Tsource':
+                dat=np.asarray(setval)
                 if dat.shape==self.Tsource.shape:
-                    self.Tsource=tmp
-            elif set1[0]=='SARsource':
-                dat=np.asarray(set1[1])
+                    self.Tsource=dat
+            elif setname=='SARsource':
+                dat=np.asarray(setval)
                 if dat.shape==self.Tsource.shape:
                     self.Tsource=dat/self.heatcapacity
-            elif set1[0]=='k':
-                if set1[1]>0:
-                    self.set_k(set1[1])
-            elif set1[0]=='sourcescale':
-                self.sourcescale=set1[1]
-            elif set1[0]=='tend':
-                self.tend=set1[1]
+            elif setname=='sourcescale':
+                self.sourcescale=setval
+            elif setname=='tend':
+                self.tend=setval
 
 
 class TSolverSideCar(SideCar):
