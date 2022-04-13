@@ -1,7 +1,6 @@
 
 from osparc_control import CommandManifest, CommandParameter, CommandType, PairedTransmitter
 
-import time
 import numpy as np 
 import matplotlib.pyplot as plt
 
@@ -112,6 +111,3 @@ if __name__ == "__main__":
         out = controller.run()
     
     plot(out)
-
-
-
