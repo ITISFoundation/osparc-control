@@ -38,28 +38,27 @@ class TSolver:
 
         self.transmitter.finish()
         return self.T
+       
+    def wait_for_start_signal(self):
+        while not self.transmitter.startsignal:
+            time.sleep(0.05)
+            self.transmitter.sync()
+        self.transmitter.release()
 
-    """ # Now uses transmitter finish()
-    def finish(self):
-        self.record(float("inf"))
-        self.transmitter.finish()
-        #self.transmitter.endsignal=True; #make function for this and the next line
-        #self.transmitter.pause() # what happens if the transmitter is in the middle of executing the wait_for_pause; how about release synchronization
-    """
-
+ 
     def record(self,t):
-        entry = transmitter.get_record_entry(t) # Check if a record request is present
-        if entry:
-            _, recindex, (name, params) = entry
+        entry = transmitter.get_record_entry(t) 
+        if entry[0]:
+            recindex, (name, params) = entry
             if name=='Tpoint':
                 self.transmitter.records[recindex].append((t,self.T[params[0],params[1]]))
             elif name=='Tvol':
                 self.transmitter.records[recindex].append((t,self.T[params[0]:params[2],params[1]:params[3]]))
 
     def apply_set(self,t):
-        entry = transmitter.get_set_entry(t) # Check if a request to set a value is present
+        entry = transmitter.get_set_entry(t)
         if entry:
-            _, _, (setname, setval) = entry
+            (setname, setval) = entry
             if setname =='Tsource':
                 if setval.shape==Tsource.shape:
                     self.Tsource=setval
@@ -70,6 +69,15 @@ class TSolver:
                 self.sourcescale=setval
             elif setname=='tend':
                 self.tend=setval
+
+    """ # Now uses transmitter finish()
+    def finish(self):
+        self.record(float("inf"))
+        self.transmitter.finish()
+        #self.transmitter.endsignal=True; #make function for this and the next line
+        #self.transmitter.pause() # what happens if the transmitter is in the middle of executing the wait_for_pause; how about release synchronization
+    """
+
 
 def plot(out):
     fig, ax = plt.subplots()
@@ -105,10 +113,20 @@ if __name__ == "__main__":
         transmitter.canbegotten = ['Tpoint', 'Tvol']
         transmitter.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
 
-        n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; heatcapacity=10; tend=500
-        solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, heatcapacity, tend, transmitter)
+        # Define initial conditions
+        n=20
+        t_start = np.zeros((n,n), float)
+        dt = 0.1
+        thermo_source=np.ones((n-2,n-2), float)
+        dx = 1
+        k = 1
+        heat_capacity = 10
+        sourcescale = 1 
+        t_end = 500
+
+        solver = TSolver(dx, n, t_start, dt, thermo_source, k, sourcescale, heat_capacity, t_end, transmitter)
 
         out = solver.run()
-        print(f"Temperature value at time {tend} is {out[10,10]}")
+        print(f"Temperature value at time {t_end} is {out[10,10]}")
         time.sleep(1)
         plot(out)

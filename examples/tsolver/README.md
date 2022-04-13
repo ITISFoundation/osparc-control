@@ -43,8 +43,8 @@ In order to work with our [Generic Coupling API](#generic-coupling-api), control
 
 Example code in `Tsolver.py` that uses those functions:
 ```python
-sidecar.canbegotten = ['Tpoint', 'Tvol']
-sidecar.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
+transmitter.canbegotten = ['Tpoint', 'Tvol']
+transmitter.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
 ```
 `record`: retrieve the values of certain variables (the ones that *can_be_gotten*) at a given time point
 

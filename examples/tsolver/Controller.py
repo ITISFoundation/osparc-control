@@ -36,7 +36,7 @@ class Controller:
         # Record later and wait
         recindex=self.controlled.record(self.regulationparam_key, self.iteration_time, self.regulationparam_otherparams)
         waittime=self.iteration_time
-        waitindex=self.controlled.wait_for_me_at(waittime)
+        waitindex=self.controlled.wait_at_t(waittime)
         # Set now
         newset=self.initval
         self.controlled.setnow(self.tweakparam_key, newset)

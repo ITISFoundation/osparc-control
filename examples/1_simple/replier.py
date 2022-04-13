@@ -36,7 +36,7 @@ while wait_for_requests:
             paired_transmitter.reply_to_command(
                 request_id=command.request_id, payload=random_int
             )
-        wait_for_requests = False
+            wait_for_requests = False
 
 # allow for message to be delivered
 time.sleep(0.3)

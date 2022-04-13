@@ -1,6 +1,6 @@
 # Osparc Control
 
-[![PyPI](https://img.shields.io/pypi/v/osparc-control.svg)](https://pypi.org/project/osparc-control/) [![Status](https://img.shields.io/pypi/status/osparc-control.svg)](https://pypi.org/project/osparc-control/) [![Python Version](https://img.shields.io/pypi/pyversions/osparc-control)](https://pypi.org/project/osparc-control) [![License](https://img.shields.io/pypi/l/osparc-control)](https://opensource.org/licenses/MIT)
+[![PyPI](https://img.shields.io/pypi/v/osparc-control.svg)](https://pypi.org/project/osparc-control/) [![Status](https://img.shields.io/pypi/status/osparc-control.svg)](https://pypi.org/project/osparc-control/) [![Python Version](https://img.shields.io/pypi/pyversions/osparc-control)](https://pypi.org/project/osparc-control) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [![Tests](https://github.com/ITISFoundation/osparc-control/workflows/Tests/badge.svg)](https://github.com/ITISFoundation/osparc-control/actions?workflow=Tests) [![codecov](https://codecov.io/gh/ITISFoundation/osparc-control/branch/master/graph/badge.svg?token=3P04fQlaEb)](https://codecov.io/gh/ITISFoundation/osparc-control) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit) [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
