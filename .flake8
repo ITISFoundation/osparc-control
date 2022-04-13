@@ -2,8 +2,8 @@
 select = B,B9,C,DAR,E,F,N,RST,S,W
 ignore = E203,E501,RST201,RST203,RST301,W503
 exclude =
-    examples/coupledSolver/*,
-    examples/3_tsolver/*
+    examples/3_tsolver/*,
+    examples/4_coupled_solver/*
 max-line-length = 80
 max-complexity = 10
 docstring-convention = google
