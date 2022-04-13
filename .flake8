@@ -2,7 +2,7 @@
 select = B,B9,C,DAR,E,F,N,RST,S,W
 ignore = E203,E501,RST201,RST203,RST301,W503
 exclude =
-    examples/coupledSolver,
+    examples/coupledSolver/*,
     examples/3_tsolver/*
 max-line-length = 80
 max-complexity = 10
