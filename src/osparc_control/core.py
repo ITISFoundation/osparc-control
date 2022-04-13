@@ -74,9 +74,6 @@ class PairedTransmitter:
         listen_port: int = DEFAULT_LISTEN_PORT,
     ) -> None:
 
-        self.remote_host = remote_host
-        self.remote_port = remote_port
-
         self._sender_receiver_pair: SenderReceiverPair = _get_sender_receiver_pair(
             remote_host=remote_host, remote_port=remote_port, listen_port=listen_port
         )
