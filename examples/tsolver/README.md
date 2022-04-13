@@ -25,7 +25,12 @@ Once the simulation has finished, two figures will be saved in your working dire
 
 ## How this example works
 
-A thermal solver (```Tsolver.py```) is controlled by a simple and generic PID controller (```Controller.py```) to reach the setpoint temperature value of 4 (*setpoint* argument in ```Controller.py```). At each coupling interval, defined by the Controller argument *iteration_time*, the temperature value (*T*) is recorded , the *error* between the current value and the setpoint is computed, and a new *sourcescale* value is set. At the end of the simulation the temperature value reaches the desired *setpoint*. This is just a toy example for illustrative purposes, we are looking forward to receive implementations of much more refined controllers and models!
+A thermal solver (```Tsolver.py```) is controlled by a simple and generic PID controller (```Controller.py```) to reach the setpoint temperature value of 4 (*setpoint* argument in ```Controller.py```). 
+At each coupling interval, defined by the Controller argument *iteration_time*, the temperature value (*T*) is recorded , the *error* between the current value and the setpoint is computed, and a new *sourcescale* value is set. 
+At the end of the simulation the temperature value reaches the desired *setpoint*. 
+
+This is just a toy example for illustrative purposes, we are looking forward to receive implementations of much more refined controllers and models!
+
 Recording/setting rely on instructions transmitted between the Solver and the Controller, all the helper functions for the communication are encapsulated in ```communication.py```. These helper functions are designed to be generic and should work out-of-the-box, this means that you can just copy this script and use it to implement your use-case. <br /><br /> 
 
 ## How to adapt this example to other use-cases
