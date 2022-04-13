@@ -66,9 +66,9 @@ In this example, the Controller uses these set of functions (defined in `communi
 
 `continue_until`: continue the iterations until the desired time point
 
-Both the Model and Controller can make use of additional functions, such as `start` and `finish`, to send start and end signals and can retrieve the start/finished/paused status of the other.<br /><br /> 
+Both the Model and Controller can make use of additional functions, such as `start` and `finish`, to send start and end signals.<br /><br /> 
 
 ## Generic Coupling API
-The Coupling API has been designed to allow closed-loop simulations in [o<sup>2</sup>S<sup>2</sup>PARC](https://docs.osparc.io/#/) for different kinds of control applications. This API is generic and allows the combination of different physiological models and controllers contributed by the community and onboarded on o<sup>2</sup>S<sup>2</sup>PARC through [dedicated Nodes](o<sup>2</sup>S<sup>2</sup>PARC). They can be written in different programming languages, run on different time scales, etc., as long as they support a Python API and the functions outlined above.
+The Coupling API has been designed to allow closed-loop simulations in [o<sup>2</sup>S<sup>2</sup>PARC](https://docs.osparc.io/#/) for different kinds of control applications. This API is generic and allows the combination of different physiological models and controllers contributed by the community and onboarded on o<sup>2</sup>S<sup>2</sup>PARC through [dedicated Nodes](https://docs.osparc.io/#/docs/submission). 
 
 You are welcome to contact us for more information and suggestions, at support@osparc.io. Please mention "Control API" in the subject.
