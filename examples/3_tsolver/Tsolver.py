@@ -1,6 +1,8 @@
 import time
 
 import matplotlib.pyplot as plt
+import numpy as np
+
 from communication import Transmitter
 
 from osparc_control import CommandManifest
