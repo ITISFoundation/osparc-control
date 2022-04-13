@@ -4,10 +4,10 @@ from osparc_control import CommandManifest, CommandParameter, CommandType, Paire
 import numpy as np
 import matplotlib.pyplot as plt
 
-from communication import SideCar
+from communication import Transmitter
 
 class TSolver:
-    def __init__(self, dx, n, Tinit, dt, Tsource, k, sourcescale, heatcapacity, tend, sidecar):
+    def __init__(self, dx, n, Tinit, dt, Tsource, k, sourcescale, heatcapacity, tend, transmitter):
         self.T = Tinit
         self.t = 0
         self.dx = dx
@@ -19,45 +19,45 @@ class TSolver:
         self.sourcescale = sourcescale
         self.heatcapacity = heatcapacity
         self.tend = tend
-        self.sidecar = sidecar
+        self.transmitter = transmitter
 
     def run(self):
-        sidecar.wait_for_start_signal()
+        transmitter.wait_for_start_signal()
         #self.record(self.t) # Duplicate: controller sends instruction for this
         #self.apply_set(self.t) # Duplicate: controller sends instruction for this
  
         while self.t<self.tend:
             print(f"Simulation time is {round(self.t,2)}")
             self.record(self.t)
-            sidecar.wait_if_necessary(self.t)
+            transmitter.wait_if_necessary(self.t)
             self.apply_set(self.t)  
             n=self.n
             diffusion=self.k/(self.dx*self.dx) * (self.T[:n-2,1:n-1]+self.T[1:n-1,:n-2]+self.T[2:n,1:n-1]+self.T[1:n-1,2:n]-4*self.T[1:n-1,1:n-1])
             self.T[1:n-1,1:n-1]=self.T[1:n-1,1:n-1]+self.dt*(self.sourcescale*self.Tsource+diffusion)
             self.t=self.t+self.dt
 
-        self.sidecar.finish()
+        self.transmitter.finish()
         return self.T
 
-    """ # Now uses sidecar finish()
+    """ # Now uses transmitter finish()
     def finish(self):
         self.record(float("inf"))
-        self.sidecar.finish()
-        #self.sidecar.endsignal=True; #make function for this and the next line
-        #self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
+        self.transmitter.finish()
+        #self.transmitter.endsignal=True; #make function for this and the next line
+        #self.transmitter.pause() # what happens if the transmitter is in the middle of executing the wait_for_pause; how about release synchronization
     """
 
     def record(self,t):
-        entry = sidecar.get_record_entry(t) # Check if a record request is present
+        entry = transmitter.get_record_entry(t) # Check if a record request is present
         if entry:
             _, recindex, (name, params) = entry
             if name=='Tpoint':
-                self.sidecar.records[recindex].append((t,self.T[params[0],params[1]]))
+                self.transmitter.records[recindex].append((t,self.T[params[0],params[1]]))
             elif name=='Tvol':
-                self.sidecar.records[recindex].append((t,self.T[params[0]:params[2],params[1]:params[3]]))
+                self.transmitter.records[recindex].append((t,self.T[params[0]:params[2],params[1]:params[3]]))
 
     def apply_set(self,t):
-        entry = sidecar.get_set_entry(t) # Check if a request to set a value is present
+        entry = transmitter.get_set_entry(t) # Check if a request to set a value is present
         if entry:
             _, _, (setname, setval) = entry
             if setname =='Tsource':
@@ -100,13 +100,13 @@ if __name__ == "__main__":
     listen_port=1235)
 
     with control_interface:
-        sidecar = SideCar(control_interface, "RESPONDER")
+        transmitter = Transmitter(control_interface, "RESPONDER")
     
-        sidecar.canbegotten = ['Tpoint', 'Tvol']
-        sidecar.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
+        transmitter.canbegotten = ['Tpoint', 'Tvol']
+        transmitter.canbeset = ['Tsource', 'SARsource', 'k', 'sourcescale', 'tend']
 
         n=20; Tinit=np.zeros((n,n), float); dt=0.1; Tsource=np.ones((n-2,n-2), float); dx=1; k=1; sourcescale=1; heatcapacity=10; tend=500
-        solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, heatcapacity, tend, sidecar)
+        solver = TSolver(dx, n, Tinit, dt, Tsource, k, sourcescale, heatcapacity, tend, transmitter)
 
         out = solver.run()
         print(f"Temperature value at time {tend} is {out[10,10]}")

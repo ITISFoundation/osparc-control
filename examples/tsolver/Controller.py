@@ -4,7 +4,7 @@ from osparc_control import CommandManifest, CommandParameter, CommandType, Paire
 import numpy as np 
 import matplotlib.pyplot as plt
 
-from communication import SideCar
+from communication import Transmitter
 
 class Controller:
     def __init__(self,tweakparam_key, initval, regulationparam_key, regulationparam_otherparams, setpoint, iteration_time, KP, KI, KD, controlled):
@@ -106,8 +106,8 @@ if __name__ == "__main__":
    )
 
     with control_interface:
-        sidecar = SideCar(control_interface, "REQUESTER")
-        controller = Controller('sourcescale', 1, 'Tpoint', [10,10], 4, 10, 0.01, 0.00, 0, sidecar)
+        transmitter = Transmitter(control_interface, "REQUESTER")
+        controller = Controller('sourcescale', 1, 'Tpoint', [10,10], 4, 10, 0.01, 0.00, 0, transmitter)
         out = controller.run()
     
     plot(out)

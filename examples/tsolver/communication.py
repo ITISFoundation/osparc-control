@@ -12,7 +12,7 @@ class VariableNotAccessibleError(BaseControlError):
 #class EntryNotAvailable(BaseControlError):
 #    """The entry is not available"""
 
-class SideCar:
+class Transmitter:
     def __init__(self, interface, io):
         self.t=0
         self.startsignal=False
