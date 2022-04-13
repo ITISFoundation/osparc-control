@@ -43,7 +43,7 @@ Tsource=np.ones((n-2,n-2), float);
 
 
 threadT1a=TsolverSidecarThread(model_interface)
-threadT2=TsolverThread(1, n, Tinit, 0.1, Tsource, 1, 10, 1, 5, threadT1a.myTSolverSideCar)
+threadT2=TsolverThread(1, n, Tinit, 0.1, Tsource, 1, 10, 1, 5, threadT1a.myTSolverTransmitter)
 
 
 # Start new Threads

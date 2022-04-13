@@ -2,13 +2,13 @@
 import numpy as np
 import threading
 import time 
-from communication import SideCar
+from communication import Transmitter
 
 
 class EM_T_coupler:
-    def __init__(self,sidecarsateliteEM,sidecarsateliteT,EMsetparam_key,EMgetparam_key,EMgetparam_otherparams,Tsetparam_key,Tgetparam_key,Tgetparam_otherparams,coupling_interval):
-        self.sidecarsateliteEM=sidecarsateliteEM
-        self.sidecarsateliteT=sidecarsateliteT
+    def __init__(self,transmittersateliteEM,transmittersateliteT,EMsetparam_key,EMgetparam_key,EMgetparam_otherparams,Tsetparam_key,Tgetparam_key,Tgetparam_otherparams,coupling_interval):
+        self.transmittersateliteEM=transmittersateliteEM
+        self.transmittersateliteT=transmittersateliteT
         self.EMsetparam_key=EMsetparam_key
         self.Tsetparam_key=Tsetparam_key
         self.EMgetparam_key=EMgetparam_key
@@ -21,39 +21,39 @@ class EM_T_coupler:
         
     def main(self):
         time=0
-        recindexEM=self.sidecarsateliteEM.record(self.EMgetparam_key, self.coupling_interval, self.EMgetparam_otherparams)
-        recindexT=self.sidecarsateliteT.record(self.Tgetparam_key, self.coupling_interval, self.Tgetparam_otherparams)
+        recindexEM=self.transmittersateliteEM.record(self.EMgetparam_key, self.coupling_interval, self.EMgetparam_otherparams)
+        recindexT=self.transmittersateliteT.record(self.Tgetparam_key, self.coupling_interval, self.Tgetparam_otherparams)
 
-        waitindexEM=self.sidecarsateliteEM.wait_at_t(self.coupling_interval)
-        waitindexT=self.sidecarsateliteT.wait_at_t(self.coupling_interval)
-        self.sidecarsateliteEM.start()
-        self.sidecarsateliteT.start()
+        waitindexEM=self.transmittersateliteEM.wait_at_t(self.coupling_interval)
+        waitindexT=self.transmittersateliteT.wait_at_t(self.coupling_interval)
+        self.transmittersateliteEM.start()
+        self.transmittersateliteT.start()
         nexttime=self.coupling_interval
-        while not (self.sidecarsateliteEM.finished() or self.sidecarsateliteT.finished()): #xxx correct?
-            self.sidecarsateliteEM.wait_for_time(nexttime,1000)
-            self.sidecarsateliteT.wait_for_time(nexttime,1000)
+        while not (self.transmittersateliteEM.finished() or self.transmittersateliteT.finished()): #xxx correct?
+            self.transmittersateliteEM.wait_for_time(nexttime,1000)
+            self.transmittersateliteT.wait_for_time(nexttime,1000)
             # import pdb; pdb.set_trace()
-            SAR=np.asarray(self.sidecarsateliteEM.get(recindexEM)[0][1])
-            T=np.asarray(self.sidecarsateliteT.get(recindexT)[0][1])
+            SAR=np.asarray(self.transmittersateliteEM.get(recindexEM)[0][1])
+            T=np.asarray(self.transmittersateliteT.get(recindexT)[0][1])
             Tlist=T.tolist()
             SARlist=SAR.tolist()
-            self.sidecarsateliteEM.setnow(self.EMsetparam_key, Tlist)
-            self.sidecarsateliteT.setnow(self.Tsetparam_key, SARlist)
+            self.transmittersateliteEM.setnow(self.EMsetparam_key, Tlist)
+            self.transmittersateliteT.setnow(self.Tsetparam_key, SARlist)
             self.Tstored.append(T)
             self.EMstored.append(SAR)
             nexttime=nexttime+self.coupling_interval
-            recindexEM=self.sidecarsateliteEM.record(self.EMgetparam_key, nexttime, self.EMgetparam_otherparams)
-            recindexT=self.sidecarsateliteT.record(self.Tgetparam_key, nexttime, self.Tgetparam_otherparams)    
-            waitindexEM=self.sidecarsateliteEM.continue_until(nexttime,waitindexEM)    
-            waitindexT=self.sidecarsateliteT.continue_until(nexttime,waitindexT)
+            recindexEM=self.transmittersateliteEM.record(self.EMgetparam_key, nexttime, self.EMgetparam_otherparams)
+            recindexT=self.transmittersateliteT.record(self.Tgetparam_key, nexttime, self.Tgetparam_otherparams)    
+            waitindexEM=self.transmittersateliteEM.continue_until(nexttime,waitindexEM)    
+            waitindexT=self.transmittersateliteT.continue_until(nexttime,waitindexT)
         return 0
 
 
 
 class EM_T_couplerThread(threading.Thread): 
-    def __init__(self,sidecarsateliteEM,sidecarsateliteT,EMsetparam_key,EMgetparam_key,EMgetparam_otherparams,Tsetparam_key,Tgetparam_key,Tgetparam_otherparams,coupling_interval):
+    def __init__(self,transmittersateliteEM,transmittersateliteT,EMsetparam_key,EMgetparam_key,EMgetparam_otherparams,Tsetparam_key,Tgetparam_key,Tgetparam_otherparams,coupling_interval):
         threading.Thread.__init__(self)
-        self.myCoupler=EM_T_coupler(sidecarsateliteEM,sidecarsateliteT,EMsetparam_key,EMgetparam_key,EMgetparam_otherparams,Tsetparam_key,Tgetparam_key,Tgetparam_otherparams,coupling_interval)
+        self.myCoupler=EM_T_coupler(transmittersateliteEM,transmittersateliteT,EMsetparam_key,EMgetparam_key,EMgetparam_otherparams,Tsetparam_key,Tgetparam_key,Tgetparam_otherparams,coupling_interval)
         self.name='EM_T_coupler'
     def run(self):
         print("Starting ",self.name)
@@ -65,7 +65,7 @@ class EM_T_couplerThread(threading.Thread):
 class EMsolverSidecarSateliteThread(threading.Thread): 
     def __init__(self,interface):
         threading.Thread.__init__(self)
-        self.myEMSolverSideCarSatelite=EMSolverSideCarSatelite(interface)
+        self.myEMSolverTransmitterSatelite=EMSolverTransmitterSatelite(interface)
         self.name='EMsolverSidecarSatelite'
         self.stop=False
     def run(self):
@@ -76,9 +76,9 @@ class EMsolverSidecarSateliteThread(threading.Thread):
         return 0
 
 
-class EMSolverSideCarSatelite(SideCar):
+class EMSolverTransmitterSatelite(Transmitter):
     def __init__(self, interface):
-        SideCar.__init__(self, interface, "REQUESTER")
+        Transmitter.__init__(self, interface, "REQUESTER")
         self.canbeset=self.can_be_set()
         self.canbegotten=self.can_be_gotten()
         
@@ -90,9 +90,9 @@ class EMSolverSideCarSatelite(SideCar):
 
 
 
-class TSolverSideCarSatelite(SideCar):
+class TSolverTransmitterSatelite(Transmitter):
     def __init__(self, interface):
-        SideCar.__init__(self, interface, "REQUESTER")
+        Transmitter.__init__(self, interface, "REQUESTER")
         self.canbeset=self.can_be_set()
         self.canbegotten=self.can_be_gotten()
         
@@ -106,7 +106,7 @@ class TSolverSideCarSatelite(SideCar):
 class TsolverSidecarSateliteThread(threading.Thread): 
     def __init__(self, interface):
         threading.Thread.__init__(self)
-        self.myTSolverSideCarSatelite=TSolverSideCarSatelite(interface)
+        self.myTSolverTransmitterSatelite=TSolverTransmitterSatelite(interface)
         self.name='TsolverSidecarSatelite'
         self.stop=False
     def run(self):

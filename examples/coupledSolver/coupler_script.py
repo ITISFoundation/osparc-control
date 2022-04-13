@@ -45,7 +45,7 @@ n=20;
 Tinit=np.zeros((n,n), float)
 threadEM1b=EMsolverSidecarSateliteThread(EMcontrol_interface)
 threadT1b=TsolverSidecarSateliteThread(Tcontrol_interface)
-thread3Coupling=EM_T_couplerThread(threadEM1b.myEMSolverSideCarSatelite,threadT1b.myTSolverSideCarSatelite,'T','SARvol',[1,1,n-1,n-1],'SARsource','Tvol',[0,0,n,n],1)
+thread3Coupling=EM_T_couplerThread(threadEM1b.myEMSolverTransmitterSatelite,threadT1b.myTSolverTransmitterSatelite,'T','SARvol',[1,1,n-1,n-1],'SARsource','Tvol',[0,0,n,n],1)
 
 
 # Start new Threads

@@ -11,10 +11,10 @@ import random
 import os
 
 
-from communication import SideCar
+from communication import Transmitter
 
 class Tsolver:
-    def __init__(self, dx, n, Tinit, dt, Tsource, k,heatcapacity, sourcescale, tend, sidecar):
+    def __init__(self, dx, n, Tinit, dt, Tsource, k,heatcapacity, sourcescale, tend, transmitter):
         self.T = Tinit;
         self.t = 0;
         self.dx = dx;
@@ -25,7 +25,7 @@ class Tsolver:
         self.k = k;
         self.sourcescale = sourcescale;
         self.tend = tend;
-        self.sidecar = sidecar;
+        self.transmitter = transmitter;
         self.heatcapacity=10
 
     def main(self):
@@ -49,27 +49,27 @@ class Tsolver:
     def wait_a_bit(self):
         time.sleep(0.05);
         
-    def wait_if_necessary(self,t): #move what is possible into the sidecar
-        while self.sidecar.get_wait_status(t):
+    def wait_if_necessary(self,t): #move what is possible into the transmitter
+        while self.transmitter.get_wait_status(t):
             print("triggered wait_if_necessary")
             self.wait_a_bit()
 
 
     def wait_for_start_signal(self):
-        while not self.sidecar.startsignal:
+        while not self.transmitter.startsignal:
             self.wait_a_bit()
-            self.sidecar.sync()
-        self.sidecar.release()
+            self.transmitter.sync()
+        self.transmitter.release()
 
     def finish(self):
         self.record(float("inf"))
-        self.sidecar.finish()
-        # self.sidecar.waitqueue.deleteall();
-        # self.sidecar.endsignal=True; #make function for this and the next line
-        # self.sidecar.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
+        self.transmitter.finish()
+        # self.transmitter.waitqueue.deleteall();
+        # self.transmitter.endsignal=True; #make function for this and the next line
+        # self.transmitter.pause() # what happens if the transmitter is in the middle of executing the wait_for_pause; how about release synchronization
 
     def record(self,t):
-        entry = self.sidecar.get_record_entry(t)
+        entry = self.transmitter.get_record_entry(t)
         record = None
 
         if entry[0]:
@@ -83,11 +83,11 @@ class Tsolver:
                 record = record.tolist()
             else:
                 print("Record key not understood: " + str(name))
-            self.sidecar.records[recindex].append((t,record))
-        self.sidecar.t=t
+            self.transmitter.records[recindex].append((t,record))
+        self.transmitter.t=t
 
     def apply_set(self,t):
-        entry = self.sidecar.get_set_entry(t)
+        entry = self.transmitter.get_set_entry(t)
         if entry:
             (setname, setval) = entry
             if setname =='Tsource':
@@ -104,9 +104,9 @@ class Tsolver:
                 self.tend=setval
 
 
-class TSolverSideCar(SideCar):
+class TSolverTransmitter(Transmitter):
     def __init__(self, interface ):
-        SideCar.__init__(self, interface, "RESPONDER")
+        Transmitter.__init__(self, interface, "RESPONDER")
         self.canbeset=self.can_be_set()
         self.canbegotten=self.can_be_gotten()
         
@@ -118,9 +118,9 @@ class TSolverSideCar(SideCar):
 
 
 class TsolverThread(threading.Thread): 
-    def __init__(self, dx, n, Tinit, dt, Tsource, k, heatcapacity, sourcescale, tend, sidecar):
+    def __init__(self, dx, n, Tinit, dt, Tsource, k, heatcapacity, sourcescale, tend, transmitter):
         threading.Thread.__init__(self)
-        self.myTsolver=Tsolver(dx, n, Tinit, dt, Tsource, k, heatcapacity, sourcescale, tend, sidecar)
+        self.myTsolver=Tsolver(dx, n, Tinit, dt, Tsource, k, heatcapacity, sourcescale, tend, transmitter)
         self.name='Tsolver'
     def run(self):
         print("Starting ",self.name)
@@ -130,7 +130,7 @@ class TsolverThread(threading.Thread):
 class TsolverSidecarThread(threading.Thread): 
     def __init__(self, interface ):
         threading.Thread.__init__(self)
-        self.myTSolverSideCar=TSolverSideCar(interface)
+        self.myTSolverTransmitter=TSolverTransmitter(interface)
         self.name='TsolverSidecar'
         self.stop=False
     def run(self):

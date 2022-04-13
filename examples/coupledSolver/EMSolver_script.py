@@ -44,7 +44,7 @@ EMinit=np.zeros((n,n), float)
 
 
 threadEM1a=EMsolverSidecarThread(model_interface)
-threadEM2=EMsolverThread(n, EMinit, 1, EMsource, Tinit, 5, 1, 5, threadEM1a.myEMSolverSideCar)
+threadEM2=EMsolverThread(n, EMinit, 1, EMsource, Tinit, 5, 1, 5, threadEM1a.myEMSolverTransmitter)
 
 # Start new Threads
 model_interface.start_background_sync()

@@ -13,10 +13,10 @@ import random
 import os
 
 
-from communication import SideCar
+from communication import Transmitter
 
 class EMsolver:
-    def __init__(self, n, EMinit, dt, EMsource, Tinit, tend, sigma0, sigmaT, sidecar):
+    def __init__(self, n, EMinit, dt, EMsource, Tinit, tend, sigma0, sigmaT, transmitter):
         self.EM = EMinit;
         self.t = 0
         self.n = n
@@ -26,7 +26,7 @@ class EMsolver:
         self.sigmaT = sigmaT;
         self.sigma = self.sigma_calc(Tinit)
         self.tend = tend;
-        self.sidecar = sidecar;
+        self.transmitter = transmitter;
         self.V = np.zeros([n,n])
         self.SAR = np.zeros([n,n])
 
@@ -201,31 +201,31 @@ class EMsolver:
         time.sleep(0.05);
  
     def wait_if_necessary(self,t): 
-        while self.sidecar.get_wait_status(t):
+        while self.transmitter.get_wait_status(t):
             print("triggered wait_if_necessary")
             self.wait_a_bit()
 
     def wait_for_start_signal(self):
-        while not self.sidecar.startsignal:
+        while not self.transmitter.startsignal:
             self.wait_a_bit()
-            self.sidecar.sync()
-        self.sidecar.release()
+            self.transmitter.sync()
+        self.transmitter.release()
 
     def is_finished(self):
         self.record(float("inf"))
-        self.sidecar.finish()
+        self.transmitter.finish()
 
     def record(self,t):
-        recindex,recinfo=self.sidecar.get_record_entry(t)
+        recindex,recinfo=self.transmitter.get_record_entry(t)
         while not (recindex is None):
             if recinfo[0]=='SARvol':
                 record = self.SAR[recinfo[1][0]:recinfo[1][2],recinfo[1][1]:recinfo[1][3]];
                 record = record.tolist()
-                self.sidecar.record_for_me(recindex,t,record)
-            recindex,recinfo=self.sidecar.get_record_entry(t)
+                self.transmitter.record_for_me(recindex,t,record)
+            recindex,recinfo=self.transmitter.get_record_entry(t)
 
     def apply_set(self,t):
-        setinfo=self.sidecar.get_set_entry(t)
+        setinfo=self.transmitter.get_set_entry(t)
         while not (setinfo is None):
             if setinfo[0]=='sigma':
                 sigma1=np.asarray(setinfo[1])
@@ -237,12 +237,12 @@ class EMsolver:
                     self.sigma=self.sigma_calc(T1)
             elif setinfo[0]=='tend':
                 self.tend=setinfo[1]
-            setinfo=self.sidecar.get_set_entry(t)                
+            setinfo=self.transmitter.get_set_entry(t)                
 
 
-class EMSolverSideCar(SideCar):
+class EMSolverTransmitter(Transmitter):
     def __init__(self, interface ):
-        SideCar.__init__(self, interface, "RESPONDER")
+        Transmitter.__init__(self, interface, "RESPONDER")
         self.canbeset=self.can_be_set()
         self.canbegotten=self.can_be_gotten()
         
@@ -256,9 +256,9 @@ class EMSolverSideCar(SideCar):
 
 
 class EMsolverThread(threading.Thread): 
-    def __init__(self, n, EMinit, dt, EMsource, Tinit, tend, sigma0, sigmaT, sidecar):
+    def __init__(self, n, EMinit, dt, EMsource, Tinit, tend, sigma0, sigmaT, transmitter):
         threading.Thread.__init__(self)
-        self.myEMsolver=EMsolver(n, EMinit, dt, EMsource, Tinit, tend, sigma0, sigmaT, sidecar)
+        self.myEMsolver=EMsolver(n, EMinit, dt, EMsource, Tinit, tend, sigma0, sigmaT, transmitter)
         self.name='EMsolver'
     def run(self):
         print("Starting ",self.name)
@@ -270,7 +270,7 @@ class EMsolverThread(threading.Thread):
 class EMsolverSidecarThread(threading.Thread): 
     def __init__(self, interface):
         threading.Thread.__init__(self)
-        self.myEMSolverSideCar=EMSolverSideCar(interface)
+        self.myEMSolverTransmitter=EMSolverTransmitter(interface)
         self.name='EMsolverSidecar'
         self.stop=False
     def run(self):

@@ -15,7 +15,7 @@ class BaseControlError(Exception):
 class VariableNotAccessibleError(BaseControlError):
     """The variable can't be accessed for recording"""
 
-class SideCar:
+class Transmitter:
     def __init__(self, interface, io):
         self.t=0
         self.startsignal=False
@@ -100,9 +100,11 @@ class SideCar:
             
     def _sleep05(self):
         time.sleep(0.05);
-        
+             
     def get(self,index):
-        return self.records[index]
+        entry = self.records[index]
+        if entry:
+            return entry
 
     def wait_for_time(self,waittime,maxcount):
         counter=0;
@@ -113,7 +115,7 @@ class SideCar:
         if self.t<waittime:
             print('timeout')
 
-    def wait_if_necessary(self,t): #move what is possible into the sidecar
+    def wait_if_necessary(self,t): #move what is possible into the transmitter
         while self.get_wait_status(t):
             self._sleep05()
 
@@ -121,7 +123,7 @@ class SideCar:
         self.sync()
         if (not self.waitqueue.empty()) and (self.waitqueue.queue[0][0] <= t):
             self.pause()
-            self.sync()
+            #self.sync() # This call seems unnecessary
             return True
         else:
             self.release()
@@ -148,11 +150,12 @@ class SideCar:
         else:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
-
+    """
     def continue_please(self,index=None):
         if self.io == "RESPONDER":
-            mywait=self.waitqueue.get(index)
+            mywait=self.waitqueue.get(index) # TODO: check that this works, python queue doesn't support get with index
             if mywait!=None:
+                #self.waitqueue.delete(index) # TODO as above. Once the item has been got, it should be "deleted" already
                 if self.waitqueue.queue[0]==None or self.waitqueue.queue[0][0]>self.t:
                     self.release();
         elif self.io == "REQUESTER":
@@ -162,26 +165,29 @@ class SideCar:
         else:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
-        
+    """ 
 
     def continue_until(self,t,index=None,index2=None): # schedule your wait point for later
         if self.io == "RESPONDER":
-            self.wait_at_t(t,index);
-            self.continue_please(index2);
-            return
+            self.wait_at_t(t,index)
+            mywait=self.waitqueue.get() # TODO: check that this works, python queue doesn't support get with index
+            if mywait!=None:
+                if self.waitqueue.queue[0][0]>self.t:
+                    self.release()
+
         elif self.io == "REQUESTER":
             index1 = random.getrandbits(64)
             self.instructions.append({'inst':'continueuntil','t':t,'index1':index1,'index2':index})
             self.release()
-            return index1;
+            return index1
         else:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
 
     def start(self):
         if self.io == "RESPONDER":
-            self.startsignal=True;
-            self.release();
+            self.startsignal=True
+            self.release()
         elif self.io == "REQUESTER":
             self.instructions.append({'inst':'start'})
             self.release()
@@ -189,18 +195,24 @@ class SideCar:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
 
+    def wait_for_start_signal(self):
+        while not self.startsignal:
+            self.sync()
+        #self.transmitter.release()
+
     def pause(self):
         if (not self.paused) or (not self.startsignal):
             self.paused=True
-
+            #self.sync() # Doesn't seem necessary
         
     def release(self):
         if self.paused:
+            #self.sync() # Doesn't seem necessary
             self.paused=False 
             self.sync()
 
     def finished(self):
-        return self.endsignal;
+        return self.endsignal
 
     def sync(self):
         if self.io == "RESPONDER":
@@ -221,8 +233,6 @@ class SideCar:
                     self.instructions=inputdata['instructions']
                     if len(self.instructions) > 0:
                         self.executeInstructions()
-
-            
         elif self.io == "REQUESTER":
             if self.instructions:
                 outputdata={'instructions':self.instructions}
@@ -246,19 +256,15 @@ class SideCar:
             print("Unsupported communicator: " + str(self.io) + " - only 'REQUESTER' or 'RESPONDER' allowed")
             return-1
 
-
-
+           
     def finish(self):
-
             self.endsignal=True; #make function for this and the next line
-            records = self.records
-            if isinstance(records, np.ndarray):
-                records = records.tolist()
-            self.pause() # what happens if the sidecar is in the middle of executing the wait_for_pause; how about release synchronization
-            outputdata={'t':self.t, 'endsignal':self.endsignal, 'paused':self.paused, 'records':records} # start?
+
+            self.pause() # what happens if the transmitter is in the middle of executing the wait_for_pause; how about release synchronization
+            outputdata={'t':self.t, 'endsignal':self.endsignal, 'paused':self.paused, 'records':self.records} # start?
             self.interface.request_without_reply(
                 "command_data", params=outputdata
-            )     
+            ) 
 
     def executeInstructions(self):
         l=len(self.instructions)
@@ -271,8 +277,6 @@ class SideCar:
                 self.record(entry['key'],entry['timepoints'],entry['otherparams'],entry['index'])
             elif inst=='waitformeat':
                 self.wait_at_t(entry['t'],entry['index'])
-            elif inst=='continueplease':
-                self.continue_please(entry['index'])
             elif inst=='continueuntil':
                 self.continue_until(entry['t'],entry['index1'],entry['index2'])
             elif inst=='start':
