@@ -120,5 +120,8 @@ def test_4_coupled_solver(example_4_coupled_solver: Path) -> None:
 
     coupler_script_path = example_4_coupled_solver / "coupler_script.py"
     tsolver_script_path = example_4_coupled_solver / "tsolver_script.py"
+    em_solver_script_path = example_4_coupled_solver / "EMSolver_script.py"
 
-    assert_run_in_parallel([coupler_script_path, tsolver_script_path])
+    assert_run_in_parallel(
+        [coupler_script_path, tsolver_script_path, em_solver_script_path]
+    )
