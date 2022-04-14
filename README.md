@@ -20,6 +20,7 @@ Read docs at https://itisfoundation.github.io/osparc-control
 
 ## Examples
 
+Check out the `examples` directory for more.
 To run below examples either clone the repo or copy code from the snippets
 below the commands
 
