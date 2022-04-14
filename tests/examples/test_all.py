@@ -50,8 +50,8 @@ def example_4_coupled_solver(examples_path: Path) -> Path:
 def install_dependencies(search_path: Path) -> None:
     requirements_txt = search_path / "requirements.txt"
     if not (requirements_txt.exists() and requirements_txt.is_file()):
-        print(f"No requirements found in {search_path.name}")
-        return
+        print(f"No requirements found in {search_path.name}")  # pragma: no cover
+        return  # pragma: no cover
 
     print(f"Installing dependencies for {search_path.name}:")
     for dependency in requirements_txt.read_text().split("\n"):
