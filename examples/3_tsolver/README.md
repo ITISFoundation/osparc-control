@@ -12,16 +12,16 @@ pip install osparc-control
 
 ## How to run this example
 
-In a terminal run:
+From the base directory ```osparc-control```, in a terminal run:
 
 ```bash
-python examples/tsolver/Tsolver.py
+python examples/3_tsolver/Tsolver.py
 ```
 
 And in another:
 
 ```bash
-python examples/tsolver/Controller.py
+python examples/3_tsolver/Controller.py
 ```
 
 The order in which you run the two scripts doesn't matter.
