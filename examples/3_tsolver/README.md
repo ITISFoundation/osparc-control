@@ -15,13 +15,13 @@ pip install osparc-control
 In a terminal run:
 
 ```bash
-python examples/tsolver/Tsolver.py
+python examples/3_tsolver/Tsolver.py
 ```
 
 And in another:
 
 ```bash
-python examples/tsolver/Controller.py
+python examples/3_tsolver/Controller.py
 ```
 
 The order in which you run the two scripts doesn't matter.
