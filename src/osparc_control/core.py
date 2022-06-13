@@ -376,7 +376,7 @@ class PairedTransmitter:
     def get_incoming_requests(self) -> List[CommandRequest]:
         """
         Non blocking, reruns all accumulated CommandRequests.
-        It is meant to be used in an existing cycle
+        It is meant to be used in an existing loop
         """
         results: Deque[CommandRequest] = deque()
 

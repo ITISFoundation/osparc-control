@@ -12,7 +12,7 @@ pip install osparc-control
 
 ## How to run this example
 
-From the base directory ```osparc-control```, in a terminal run:
+From the base directory `osparc-control`, in a terminal run:
 
 ```bash
 python examples/3_tsolver/Tsolver.py
